@@ -3,7 +3,7 @@
 
 tile_infoS tile_info[3];
 int tile_for_level[3][11][11];
-/*void initalise_tile_for_levels()
+void initalise_tile_for_levels()
 {
 
     tile_info[1].color_base[0]=1.0;
@@ -23,23 +23,23 @@ int tile_for_level[3][11][11];
     tile_for_level[1][1][1]=1;
     tile_for_level[1][1][2]=1;
     tile_for_level[1][1][3]=1;
-    tile_for_level[1][1][4]=0;
-    tile_for_level[1][1][5]=0;
+    tile_for_level[1][1][4]=1;
+    tile_for_level[1][1][5]=1;
     tile_for_level[1][1][6]=1;
     tile_for_level[1][1][7]=1;
     tile_for_level[1][1][8]=1;
-    tile_for_level[1][1][9]=0;
-    tile_for_level[1][1][10]=0;
+    tile_for_level[1][1][9]=1;
+    tile_for_level[1][1][10]=1;
 
     tile_for_level[1][2][1]=1;
     tile_for_level[1][2][2]=1;
-    tile_for_level[1][2][3]=0;
-    tile_for_level[1][2][4]=0;
+    tile_for_level[1][2][3]=1;
+    tile_for_level[1][2][4]=1;
     tile_for_level[1][2][5]=1;
     tile_for_level[1][2][6]=1;
     tile_for_level[1][2][7]=1;
-    tile_for_level[1][2][8]=0;
-    tile_for_level[1][2][9]=0;
+    tile_for_level[1][2][8]=1;
+    tile_for_level[1][2][9]=1;
     tile_for_level[1][2][10]=1;
 
     tile_for_level[1][3][1]=0;
@@ -131,4 +131,3 @@ int tile_for_level[3][11][11];
     tile_for_level[1][10][10]=0;
 
 }
-*/

@@ -17,6 +17,7 @@
 
 using namespace std;
 
+
 struct VAO {
     GLuint VertexArrayID;
     GLuint VertexBuffer;
@@ -43,7 +44,7 @@ float rectangle_rotation = 0;
 
 typedef struct tile {
     float x,y,z;
-    float width,height;
+    static const float width=0.5,height=0.25;
     //std::array<float,3> color_base,color_side,color_top;
     int type;
     VAO* object;
@@ -60,8 +61,8 @@ typedef struct score_boardS {
 score_boardS score_board;
 
 typedef struct boardS {
-    static const float x=0.5;
-    static const float y=0.5;
+    static const float x=-3.5;
+    static const float y=-3.5;
     static const float z=0.0;
 }boardS;
 boardS board;
@@ -473,41 +474,41 @@ VAO* createTile (tile *curr_tile)
     float w=curr_tile->width,h=curr_tile->height;
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
-	0.0, h, 0.0, //1
+	0.0, w, 0.0, //1
 	0.0, 0.0, 0.0, //2
 	w, 0.0, 0.0,  //3
-    0.0, h, 0.0, //1
+    0.0, w, 0.0, //1
     w, 0.0, 0.0,  //3
-    w, h, 0.0,  //4
-    w, h, 0.0,  //4
+    w, w, 0.0,  //4
+    w, w, 0.0,  //4
     w, 0.0, 0.0,  //3
-    w, 0.0, -1*w,  //5
-    w, h, 0.0,  //4
-    w, 0.0, -1*w,  //5
-    w, h, -1.0*w,  //6
-    w, h, -1.0*w,  //6
-    w, 0.0, -1*w,  //5
-    0.0, 0.0, -1*w,  //7
-    w, h, -1.0*w,  //6
-    0.0, 0.0, -1*w,  //7
-	0.0, h, -1*w,  //8
-    0.0, h, -1*w,  //8
-    0.0, 0.0, -1*w,  //7
+    w, 0.0, -1*h,  //5
+    w, w, 0.0,  //4
+    w, 0.0, -1*h,  //5
+    w, w, -1.0*h,  //6
+    w, w, -1.0*h,  //6
+    w, 0.0, -1*h,  //5
+    0.0, 0.0, -1*h,  //7
+    w, w, -1.0*h,  //6
+    0.0, 0.0, -1*h,  //7
+	0.0, w, -1*h,  //8
+    0.0, w, -1*h,  //8
+    0.0, 0.0, -1*h,  //7
     0.0, 0.0, 0.0, //2
-    0.0, h, -1*w,  //8
+    0.0, w, -1*h,  //8
     0.0, 0.0, 0.0, //2
-    0.0, h, 0.0, //1
-    0.0, h, -1*w,  //8
-    0.0, h, 0.0, //1
-    w, h, 0.0,  //4
-    0.0, h, -1*w,  //8
-    w, h, 0.0,  //4
-    w, h, -1.0*w,  //6
+    0.0, w, 0.0, //1
+    0.0, w, -1*h,  //8
+    0.0, w, 0.0, //1
+    w, w, 0.0,  //4
+    0.0, w, -1*h,  //8
+    w, w, 0.0,  //4
+    w, w, -1.0*h,  //6
     0.0, 0.0, 0.0, //2
-    0.0, 0.0, -1*w,  //7
-    w, 0.0, -1*w,  //5
+    0.0, 0.0, -1*h,  //7
+    w, 0.0, -1*h,  //5
     0.0, 0.0, 0.0, //2
-    w, 0.0, -1*w,  //5
+    w, 0.0, -1*h,  //5
     w, 0.0, 0.0,  //3
 	};
 
@@ -672,7 +673,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     list<tile>::iterator i;
     for(i=tiles_on_display.begin();i!=tiles_on_display.end();++i)
     {
-        printf("h");
+        //printf("h");
     // Load identity to model matrix
         Matrices.model = glm::mat4(1.0f);
 
@@ -741,7 +742,7 @@ void initGL (GLFWwindow* window, int width, int height)
     createFloor();
 
 //intitalise scoreboard
-    score_board.level=0;
+    score_board.level=1;
     score_board.score=0;
     score_board.time=0;
 
@@ -752,10 +753,10 @@ void initGL (GLFWwindow* window, int width, int height)
     for(i=1;i<=10;i++)
         for(j=1;j<=10;j++)
         {
-            printf("%d",tile_for_level[level][i][j] );
+            //printf("%d",tile_for_level[level][i][j] );
             if(tile_for_level[level][i][j])
             {
-                printf("f\n");
+                //printf("f\n");
                 int tile_num=tile_for_level[level][i][j];
                 tile* new_tile=new tile;
                 new_tile->x=board.x+(new_tile->width)*(i-1);
