@@ -12,6 +12,9 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <list>
+#include "tile_info.h"
+
 using namespace std;
 
 struct VAO {
@@ -37,6 +40,31 @@ GLuint programID;
 double last_update_time, current_time;
 glm::vec3 rect_pos, floor_pos;
 float rectangle_rotation = 0;
+
+typedef struct tile {
+    float x,y,z;
+    float width,height;
+    //std::array<float,3> color_base,color_side,color_top;
+    int type;
+    VAO* object;
+}tile;
+list<tile> tiles_on_display;
+
+//extern int tile_for_level[3][11][11];
+
+
+typedef struct score_boardS {
+    int score,level;
+    float time;
+}score_boardS;
+score_boardS score_board;
+
+typedef struct boardS {
+    static const float x=0.5;
+    static const float y=0.5;
+    static const float z=0.0;
+}boardS;
+boardS board;
 
 /* Function to load Shaders - Use it as it is */
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -152,8 +180,8 @@ struct VAO* create3DObject (GLenum primitive_mode, int numVertices, const GLfloa
     glGenBuffers (1, &(vao->VertexBuffer)); // VBO - vertices
     glGenBuffers (1, &(vao->ColorBuffer));  // VBO - colors
 
-    glBindVertexArray (vao->VertexArrayID); // Bind the VAO 
-    glBindBuffer (GL_ARRAY_BUFFER, vao->VertexBuffer); // Bind the VBO vertices 
+    glBindVertexArray (vao->VertexArrayID); // Bind the VAO
+    glBindBuffer (GL_ARRAY_BUFFER, vao->VertexBuffer); // Bind the VBO vertices
     glBufferData (GL_ARRAY_BUFFER, 3*numVertices*sizeof(GLfloat), vertex_buffer_data, GL_STATIC_DRAW); // Copy the vertices into VBO
     glVertexAttribPointer(
                           0,                  // attribute 0. Vertices
@@ -164,7 +192,7 @@ struct VAO* create3DObject (GLenum primitive_mode, int numVertices, const GLfloa
                           (void*)0            // array buffer offset
                           );
 
-    glBindBuffer (GL_ARRAY_BUFFER, vao->ColorBuffer); // Bind the VBO colors 
+    glBindBuffer (GL_ARRAY_BUFFER, vao->ColorBuffer); // Bind the VBO colors
     glBufferData (GL_ARRAY_BUFFER, 3*numVertices*sizeof(GLfloat), color_buffer_data, GL_STATIC_DRAW);  // Copy the vertex colors
     glVertexAttribPointer(
                           1,                  // attribute 1. Color
@@ -352,10 +380,10 @@ void createRectangle ()
 {
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
-	-0.5, 0.5, 0.5, 
-	-0.5, -0.5, 0.5, 
+	-0.5, 0.5, 0.5,
+	-0.5, -0.5, 0.5,
 	0.5, -0.5, 0.5,
-	-0.5, 0.5, 0.5, 
+	-0.5, 0.5, 0.5,
 	0.5, -0.5, 0.5,
 	0.5, 0.5, 0.5,
 	0.5, 0.5, 0.5,
@@ -372,20 +400,20 @@ void createRectangle ()
 	-0.5, 0.5, -0.5,
 	-0.5, 0.5, -0.5,
 	-0.5, -0.5, -0.5,
-	-0.5, -0.5, 0.5, 
+	-0.5, -0.5, 0.5,
 	-0.5, 0.5, -0.5,
-	-0.5, -0.5, 0.5, 
-	-0.5, 0.5, 0.5, 
+	-0.5, -0.5, 0.5,
+	-0.5, 0.5, 0.5,
 	-0.5, 0.5, -0.5,
-	-0.5, 0.5, 0.5, 
+	-0.5, 0.5, 0.5,
 	0.5, 0.5, 0.5,
 	-0.5, 0.5, -0.5,
 	0.5, 0.5, 0.5,
 	0.5, 0.5, -0.5,
-	-0.5, -0.5, 0.5, 
+	-0.5, -0.5, 0.5,
 	-0.5, -0.5, -0.5,
 	0.5, -0.5, -0.5,
-	-0.5, -0.5, 0.5, 
+	-0.5, -0.5, 0.5,
 	0.5, -0.5, -0.5,
 	0.5, -0.5, 0.5,
 	-0.5, 0.5, 0.5,
@@ -418,12 +446,12 @@ void createRectangle ()
 	1.0f, 0.0f, 0.0f,
 	1.0f, 0.0f, 0.0f,
 	1.0f, 0.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
@@ -438,12 +466,104 @@ void createRectangle ()
     // create3DObject creates and returns a handle to a VAO that can be used later
     rectangle = create3DObject(GL_TRIANGLES, 13*3, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
+
+VAO* createTile (tile *curr_tile)
+{
+    float x=curr_tile->x,y=curr_tile->y,z=curr_tile->z;
+    float w=curr_tile->width,h=curr_tile->height;
+    // GL3 accepts only Triangles. Quads are not supported
+    static const GLfloat vertex_buffer_data [] = {
+	0.0, h, 0.0, //1
+	0.0, 0.0, 0.0, //2
+	w, 0.0, 0.0,  //3
+    0.0, h, 0.0, //1
+    w, 0.0, 0.0,  //3
+    w, h, 0.0,  //4
+    w, h, 0.0,  //4
+    w, 0.0, 0.0,  //3
+    w, 0.0, -1*w,  //5
+    w, h, 0.0,  //4
+    w, 0.0, -1*w,  //5
+    w, h, -1.0*w,  //6
+    w, h, -1.0*w,  //6
+    w, 0.0, -1*w,  //5
+    0.0, 0.0, -1*w,  //7
+    w, h, -1.0*w,  //6
+    0.0, 0.0, -1*w,  //7
+	0.0, h, -1*w,  //8
+    0.0, h, -1*w,  //8
+    0.0, 0.0, -1*w,  //7
+    0.0, 0.0, 0.0, //2
+    0.0, h, -1*w,  //8
+    0.0, 0.0, 0.0, //2
+    0.0, h, 0.0, //1
+    0.0, h, -1*w,  //8
+    0.0, h, 0.0, //1
+    w, h, 0.0,  //4
+    0.0, h, -1*w,  //8
+    w, h, 0.0,  //4
+    w, h, -1.0*w,  //6
+    0.0, 0.0, 0.0, //2
+    0.0, 0.0, -1*w,  //7
+    w, 0.0, -1*w,  //5
+    0.0, 0.0, 0.0, //2
+    w, 0.0, -1*w,  //5
+    w, 0.0, 0.0,  //3
+	};
+
+    static const GLfloat color_buffer_data [] = {
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0, 0, 0,
+	0, 0, 0,
+	1, 1, 1,
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    return create3DObject(GL_TRIANGLES, 13*3, vertex_buffer_data, color_buffer_data, GL_FILL);
+}
+
+
 void createCam ()
 {
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
 	-0.1, 0, 0,
-	0.1, 0, 0, 
+	0.1, 0, 0,
 	0, 0.1, 0,
     };
 
@@ -461,10 +581,10 @@ void createFloor ()
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
 	-2, -1, 2,
-	2, -1, 2, 
+	2, -1, 2,
 	-2, -1, -2,
 	-2, -1, -2,
-	2, -1, 2, 
+	2, -1, 2,
 	2, -1, -2,
     };
 
@@ -535,7 +655,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(rectangle);
+    //draw3DObject(rectangle);
 
     // Load identity to model matrix
     Matrices.model = glm::mat4(1.0f);
@@ -549,12 +669,29 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     // draw3DObject draws the VAO given to it using current MVP matrix
     draw3DObject(cam);
 
+    list<tile>::iterator i;
+    for(i=tiles_on_display.begin();i!=tiles_on_display.end();++i)
+    {
+        printf("h");
+    // Load identity to model matrix
+        Matrices.model = glm::mat4(1.0f);
+
+        glm::mat4 translateTile = glm::translate(glm::vec3(i->x,i->y,i->z));
+        //glm::mat4 rotateCam = glm::rotate((float)((90 - camera_rotation_angle)*M_PI/180.0f), glm::vec3(0,1,0));
+        Matrices.model *= (translateTile);
+        MVP = VP * Matrices.model;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+        // draw3DObject draws the VAO given to it using current MVP matrix
+        draw3DObject((*i).object);
+    }
+
     Matrices.model = glm::translate(floor_pos);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(floor_vao);
+    //draw3DObject(floor_vao);
 
 }
 
@@ -602,13 +739,43 @@ void initGL (GLFWwindow* window, int width, int height)
     createRectangle ();
     createCam();
     createFloor();
-	
+
+//intitalise scoreboard
+    score_board.level=0;
+    score_board.score=0;
+    score_board.time=0;
+
+
+//initialise and create tiles
+    int i,j;
+    int level=score_board.level;
+    for(i=1;i<=10;i++)
+        for(j=1;j<=10;j++)
+        {
+            printf("%d",tile_for_level[level][i][j] );
+            if(tile_for_level[level][i][j])
+            {
+                printf("f\n");
+                int tile_num=tile_for_level[level][i][j];
+                tile* new_tile=new tile;
+                new_tile->x=board.x+(new_tile->width)*(i-1);
+                new_tile->y=board.y+(new_tile->width)*(j-1);
+                new_tile->z=board.z;
+                //(new_tile.color_top)=(tile_info[tile_num].color_top);
+                //(new_tile.color_base)=(tile_info[tile_num].color_base);
+                //(new_tile.color_side)=(tile_info[tile_num].color_side);
+                new_tile->type=tile_num;
+                new_tile->object=createTile(new_tile);
+                tiles_on_display.push_back(*new_tile);
+            }
+        }
+
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
 
-	
+
     reshapeWindow (window, width, height);
 
     // Background color of the scene
@@ -634,6 +801,7 @@ int main (int argc, char** argv)
     floor_rel = 1;
 
     GLFWwindow* window = initGLFW(width, height);
+    initalise_tile_for_levels();
     initGLEW();
     initGL (window, width, height);
 
@@ -651,10 +819,10 @@ int main (int argc, char** argv)
 	if(camera_rotation_angle > 720)
 	    camera_rotation_angle -= 720;
 	last_update_time = current_time;
-	draw(window, 0, 0, 0.5, 0.5, 1, 1, 1);
-	draw(window, 0.5, 0, 0.5, 0.5, 0, 1, 1);
-	draw(window, 0, 0.5, 0.5, 0.5, 1, 0, 1);
-	draw(window, 0.5, 0.5, 0.5, 0.5, 0, 0, 1);
+	draw(window, 0, 0, 1.0, 1.0, 1, 1, 1);
+	//draw(window, 0.5, 0, 0.5, 0.5, 0, 1, 1);
+	//draw(window, 0, 0.5, 0.5, 0.5, 1, 0, 1);
+	//draw(window, 0.5, 0.5, 0.5, 0.5, 0, 0, 1);
 
         // Swap Frame Buffer in double buffering
         glfwSwapBuffers(window);
