@@ -30,26 +30,36 @@ struct VAO {
 typedef struct VAO VAO;
 
 struct GLMatrices {
-    glm::mat4 projection;
+//    glm::mat4 projection;
+    glm::mat4 projectionO, projectionP;
     glm::mat4 model;
     glm::mat4 view;
     GLuint MatrixID;
 } Matrices;
 
+int proj_type;
 int do_rot, floor_rel;;
 GLuint programID;
 double last_update_time, current_time;
 glm::vec3 rect_pos, floor_pos;
 float rectangle_rotation = 0;
 
+float tile_width=0.5,tile_height=0.25; //if change here, change in struct tile
 typedef struct tile {
     float x,y,z;
     static const float width=0.5,height=0.25;
-    //std::array<float,3> color_base,color_side,color_top;
     int type;
     VAO* object;
 }tile;
 list<tile> tiles_on_display;
+
+typedef struct cubeS {
+    float x,y,z;
+    float width,height;
+    float rotation;
+    VAO* object;
+}cubeS;
+cubeS cube1,cube2;
 
 //extern int tile_for_level[3][11][11];
 
@@ -272,6 +282,12 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
     }
     else if (action == GLFW_PRESS) {
         switch (key) {
+    case GLFW_KEY_RIGHT:
+        cube1.rotation+=90;
+        cube1.x+=tile_width;
+        if (cube1.rotation==360)
+            cube1.rotation=0;
+            break;
 	case GLFW_KEY_ESCAPE:
 	    quit(window);
 	    break;
@@ -334,6 +350,9 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
     case ' ':
 	do_rot ^= 1;
 	break;
+    case 't':
+	proj_type ^= 1;
+	break;
     default:
 	break;
     }
@@ -368,10 +387,10 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
 
     // Store the projection matrix in a variable for future use
     // Perspective projection for 3D views
-    Matrices.projection = glm::perspective(fov, (GLfloat) fbwidth / (GLfloat) fbheight, 0.1f, 500.0f);
+    Matrices.projectionP = glm::perspective(fov, (GLfloat) fbwidth / (GLfloat) fbheight, 0.1f, 500.0f);
 
     // Ortho projection for 2D views
-    //Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
+    Matrices.projectionO = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
 
 VAO *rectangle, *cam, *floor_vao;
@@ -555,7 +574,96 @@ VAO* createTile (tile *curr_tile)
     };
 
     // create3DObject creates and returns a handle to a VAO that can be used later
-    return create3DObject(GL_TRIANGLES, 13*3, vertex_buffer_data, color_buffer_data, GL_FILL);
+    return create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color_buffer_data, GL_FILL);
+}
+
+VAO* createCube (cubeS* curr_cube)
+{
+    float w=curr_cube->width,h=curr_cube->height;
+    // GL3 accepts only Triangles. Quads are not supported
+    static const GLfloat vertex_buffer_data [] = {
+	0.0, w, 0.0, //1
+	0.0, 0.0, 0.0, //2
+	w, 0.0, 0.0,  //3
+    0.0, w, 0.0, //1
+    w, 0.0, 0.0,  //3
+    w, w, 0.0,  //4
+    w, w, 0.0,  //4
+    w, 0.0, 0.0,  //3
+    w, 0.0, -1*h,  //5
+    w, w, 0.0,  //4
+    w, 0.0, -1*h,  //5
+    w, w, -1.0*h,  //6
+    w, w, -1.0*h,  //6
+    w, 0.0, -1*h,  //5
+    0.0, 0.0, -1*h,  //7
+    w, w, -1.0*h,  //6
+    0.0, 0.0, -1*h,  //7
+	0.0, w, -1*h,  //8
+    0.0, w, -1*h,  //8
+    0.0, 0.0, -1*h,  //7
+    0.0, 0.0, 0.0, //2
+    0.0, w, -1*h,  //8
+    0.0, 0.0, 0.0, //2
+    0.0, w, 0.0, //1
+    0.0, w, -1*h,  //8
+    0.0, w, 0.0, //1
+    w, w, 0.0,  //4
+    0.0, w, -1*h,  //8
+    w, w, 0.0,  //4
+    w, w, -1.0*h,  //6
+    0.0, 0.0, 0.0, //2
+    0.0, 0.0, -1*h,  //7
+    w, 0.0, -1*h,  //5
+    0.0, 0.0, 0.0, //2
+    w, 0.0, -1*h,  //5
+    w, 0.0, 0.0,  //3
+	};
+
+    static const GLfloat color_buffer_data [] = {
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0, 0, 0,
+	0, 0, 0,
+	1, 1, 1,
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    return create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
 
@@ -619,6 +727,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
 
     // Eye - Location of camera. Don't change unless you are sure!!
     glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
+    //glm::vec3 eye(1,2,2);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
     glm::vec3 target (0, 0, 0);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
@@ -631,11 +740,12 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
 	Matrices.view = glm::mat4(1.0f);
 
     // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
-    glm::mat4 VP;
-    if (doP)
-	VP = Matrices.projection * Matrices.view;
-    else
-	VP = Matrices.view;
+    //glm::mat4 VP;
+    glm::mat4 VP = (proj_type?Matrices.projectionP:Matrices.projectionO) * Matrices.view;
+    //if (doP)
+	//VP = Matrices.projection * Matrices.view;
+    //else
+	//VP = Matrices.view;
 
     // Send our transformation to the currently bound shader, in the "MVP" uniform
     // For each model you render, since the MVP will be different (at least the M part)
@@ -686,6 +796,76 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
         // draw3DObject draws the VAO given to it using current MVP matrix
         draw3DObject((*i).object);
     }
+
+    //cube1
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 rotationOverallCube = glm::mat4(1.0f);
+    //rotation of cube1
+    glm::mat4 rotateCube = glm::mat4(1.0f);
+    glm::mat4 translateCubeEdge = glm::mat4(1.0f);
+    glm::mat4 translateCube1EdgeR = glm::mat4(1.0f);
+    /*if(cube1.rotation<=-90)
+    {
+        printf("p\n");
+        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
+        translateCubeEdge *= glm::translate(glm::vec3(-1*(cube1.width),0.0,cube1.height));
+        translateCube1EdgeR *= glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        Matrices.model *=translateCube1EdgeR * rotateCube * translateCubeEdge;
+    }
+    if(cube1.rotation<=-180)
+    {
+    printf("q\n");
+    //rotateCube = glm::rotate((float)(-1*90*M_PI/180.0f), glm::vec3(0,0,1));
+        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
+        //translateCubeEdge *= glm::translate(glm::vec3(-1*(cube1.width),-1*(cube1.width),cube1.height));
+        translateCubeEdge = glm::translate(glm::vec3(-1*(cube1.width),0.0,cube1.height));
+        //translateCube1EdgeR *= glm::translate(glm::vec3((cube1.width),(cube1.width),-1*cube1.height));
+        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        Matrices.model =translateCube1EdgeR * rotateCube * translateCubeEdge * Matrices.model;
+    }
+    if(cube1.rotation<=-270)
+    {
+    printf("r\n");
+    //rotateCube = glm::rotate((float)(-1*90*M_PI/180.0f), glm::vec3(0,0,1));
+        rotateCube = glm::rotate((float)(-1*90*M_PI/180.0f), glm::vec3(0,1,0));
+        //translateCubeEdge *= glm::translate(glm::vec3(0.0,-1*(cube1.width),cube1.height));
+        translateCubeEdge *= glm::translate(glm::vec3(-1*(cube1.width),0.0,0.0));
+        //translateCube1EdgeR *= glm::translate(glm::vec3(0.0,-1*(cube1.width),-1*cube1.height));
+        translateCube1EdgeR *= glm::mat4(1.0f);
+        Matrices.model *=translateCube1EdgeR * rotateCube * translateCubeEdge;
+    }*/
+
+    for(float angle=cube1.rotation; angle>0;angle-=90)
+    {
+        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
+        translateCubeEdge = glm::translate(glm::vec3(-1*(cube1.width),0.0,cube1.height));
+        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+
+    }
+
+    printf("%f %f %f %f\n",cube1.x,cube1.y,cube1.z,cube1.rotation );
+    glm::mat4 translateCube1 = glm::translate(glm::vec3(cube1.x,cube1.y,cube1.z));
+    //glm::mat4 translateCube1 = glm::translate(glm::vec3(0.0,0.0,0.0));
+    Matrices.model = translateCube1*rotationOverallCube;
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+    // draw3DObject draws the VAO given to it using current MVP matrix
+    draw3DObject(cube1.object);
+
+    //cube2
+//    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translateonCube1 = glm::translate(glm::vec3(0.0,0.0,cube1.width));
+    glm::mat4 translateCube2 = glm::translate(glm::vec3(cube1.x,cube1.y,cube1.z));
+//    glm::mat4 rotateCube2 = glm::rotate((float)(cube1.rotation*M_PI/180.0f), glm::vec3(0,0,1));
+    Matrices.model = (translateCube2 * rotationOverallCube * translateonCube1);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+    // draw3DObject draws the VAO given to it using current MVP matrix
+    draw3DObject(cube2.object);
+
 
     Matrices.model = glm::translate(floor_pos);
     MVP = VP * Matrices.model;
@@ -750,6 +930,7 @@ void initGL (GLFWwindow* window, int width, int height)
 //initialise and create tiles
     int i,j;
     int level=score_board.level;
+    float cube_initial_posX=0,cube_initial_posY=0,cube_initial_posZ=0.0;
     for(i=1;i<=10;i++)
         for(j=1;j<=10;j++)
         {
@@ -768,8 +949,32 @@ void initGL (GLFWwindow* window, int width, int height)
                 new_tile->type=tile_num;
                 new_tile->object=createTile(new_tile);
                 tiles_on_display.push_back(*new_tile);
+                if(cube_initial_posX==0.0 && cube_initial_posY==0.0 && cube_initial_posZ==0.0)
+                {
+                    cube_initial_posX=new_tile->x;
+                    cube_initial_posY=new_tile->y;
+                    cube_initial_posZ=new_tile->z;
+                }
             }
         }
+
+//cube1
+    cube1.x=cube_initial_posX;
+    cube1.y=cube_initial_posY;
+    cube1.width=tile_width;
+    cube1.height=tile_width;
+    cube1.z=cube_initial_posZ+cube1.height;
+    cube1.rotation=0.0;
+    cube1.object=createCube(&cube1);
+
+//cube2
+    cube2.x=cube_initial_posX;
+    cube2.y=cube_initial_posY;
+    cube2.z=cube_initial_posZ+tile_width;
+    cube2.width=tile_width;
+    cube2.height=tile_width;
+    cube2.object=createCube(&cube2);
+
 
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -796,6 +1001,7 @@ int main (int argc, char** argv)
 {
     int width = 600;
     int height = 600;
+    proj_type = 1;
     rect_pos = glm::vec3(0, 0, 0);
     floor_pos = glm::vec3(0, 0, 0);
     do_rot = 0;
