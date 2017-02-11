@@ -14,6 +14,7 @@
 
 #include <list>
 #include "tile_info.h"
+#include "header.h"
 
 using namespace std;
 
@@ -66,7 +67,7 @@ float cuboid_lengthX,cuboid_lengthY,cuboid_lengthZ;
 
 
 typedef struct score_boardS {
-    int score,level;
+    int score,level,life;
     float time;
 }score_boardS;
 score_boardS score_board;
@@ -77,6 +78,12 @@ typedef struct boardS {
     static const float z=0.0;
 }boardS;
 boardS board;
+
+//rotation of cube1
+glm::mat4 rotationOverallCube;
+glm::mat4 rotateCube;
+glm::mat4 translateCubeEdge;
+glm::mat4 translateCube1EdgeR;
 
 void check_cube_fall();
 
@@ -265,11 +272,6 @@ bool rectangle_rot_status = true;
 
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
-glm::mat4 rotationOverallCube = glm::mat4(1.0f);
-    //rotation of cube1
-glm::mat4 rotateCube = glm::mat4(1.0f);
-glm::mat4 translateCubeEdge = glm::mat4(1.0f);
-glm::mat4 translateCube1EdgeR = glm::mat4(1.0f);
 void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     // Function is called first on GLFW_PRESS.
@@ -881,67 +883,12 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
         glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
         // draw3DObject draws the VAO given to it using current MVP matrix
-        draw3DObject((*i).object);
+        if(i->type==1)
+            draw3DObject((*i).object);
     }
 
     //cube1
     Matrices.model = glm::mat4(1.0f);
-    /*glm::mat4 rotationOverallCube = glm::mat4(1.0f);
-    //rotation of cube1
-    glm::mat4 rotateCube = glm::mat4(1.0f);
-    glm::mat4 translateCubeEdge = glm::mat4(1.0f);
-    glm::mat4 translateCube1EdgeR = glm::mat4(1.0f);
-
-    //RIGHT ROTATION
-    for(float angle=90; angle<=cube1.rotationX;angle+=90)
-    {
-        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
-        float translateInX=cube1.width;
-        if(angle==180 || angle==360)
-            translateInX=2*cube1.width;
-        translateCubeEdge = glm::translate(glm::vec3(-1*(translateInX),0.0,cube1.height));
-        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
-        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-    }
-
-    //LEFT ROTATION
-    for(float angle=-90; angle>=cube1.rotationX;angle-=90)
-    {
-        rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(0,1,0));
-        float translateInX=0.0;
-        if(angle==-180 || angle==-360)
-            translateInX=cube1.width;
-        translateCubeEdge = glm::translate(glm::vec3((translateInX),0.0,cube1.height));
-        translateCube1EdgeR = glm::translate(glm::vec3(cube1.width,0.0,-1*cube1.height));
-        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-    }
-
-    //TOP ROTATION
-    for(float angle=-90; angle>=cube1.rotationY;angle-=90)
-    {
-        rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(1,0,0));
-        float translateInY=cube1.width;
-        if(angle==-180 || angle==-360)
-            translateInY=2*cube1.width;
-        translateCubeEdge = glm::translate(glm::vec3(0.0,-1*(translateInY),cube1.height));
-        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
-        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-    }
-
-    //DOWN ROTATION
-    for(float angle=90; angle<=cube1.rotationY;angle+=90)
-    {
-        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(1,0,0));
-        float translateInY=0.0;
-        if(angle==180 || angle==360)
-            translateInY=cube1.width;
-        translateCubeEdge = glm::translate(glm::vec3(0.0,(translateInY),cube1.height));
-        translateCube1EdgeR = glm::translate(glm::vec3(0.0,cube1.width,-1*cube1.height));
-        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-    }
-*/
-
-
 
     glm::mat4 translateCube1 = glm::translate(glm::vec3(cube1.x,cube1.y,cube1.z));
     Matrices.model = translateCube1*rotationOverallCube;
@@ -1006,6 +953,69 @@ GLFWwindow* initGLFW (int width, int height){
     return window;
 }
 
+void initialiseVariables()
+{
+    //initialise and create tiles
+        int i,j;
+        int level=score_board.level;
+        float cube_initial_posX=0,cube_initial_posY=0,cube_initial_posZ=0.0;
+        for(i=1;i<=10;i++)
+            for(j=1;j<=10;j++)
+            {
+                //printf("%d",tile_for_level[level][i][j] );
+                if(tile_for_level[level][i][j])
+                {
+                    //printf("f\n");
+                    int tile_num=tile_for_level[level][i][j];
+                    tile* new_tile=new tile;
+                    new_tile->x=board.x+(new_tile->width)*(i-1);
+                    new_tile->y=board.y+(new_tile->width)*(j-1);
+                    new_tile->z=board.z;
+                    //(new_tile.color_top)=(tile_info[tile_num].color_top);
+                    //(new_tile.color_base)=(tile_info[tile_num].color_base);
+                    //(new_tile.color_side)=(tile_info[tile_num].color_side);
+                    new_tile->type=tile_num;
+                    new_tile->object=createTile(new_tile);
+                    tiles_on_display.push_back(*new_tile);
+                    if(cube_initial_posX==0.0 && cube_initial_posY==0.0 && cube_initial_posZ==0.0 && new_tile->type!=2)
+                    {
+                        cube_initial_posX=new_tile->x;
+                        cube_initial_posY=new_tile->y;
+                        cube_initial_posZ=new_tile->z;
+                    }
+                }
+            }
+
+    //cube1
+        cube1.x=cube_initial_posX;
+        cube1.y=cube_initial_posY;
+        cube1.width=tile_width;
+        cube1.height=tile_width;
+        cube1.z=cube_initial_posZ+cube1.height;
+        cube1.rotationX=0.0;
+        cube1.rotationY=0.0;
+        cube1.object=createCube(&cube1);
+
+    //cube2
+        cube2.x=cube_initial_posX;
+        cube2.y=cube_initial_posY;
+        cube2.z=cube_initial_posZ+tile_width;
+        cube2.width=tile_width;
+        cube2.height=tile_width;
+        cube2.object=createCube(&cube2);
+
+        //cuboid
+            cuboid_lengthX=cube1.width;
+            cuboid_lengthY=cube1.width;
+            cuboid_lengthZ=2*cube1.width;
+        //matrices for cube rotation
+        rotationOverallCube=glm::mat4(1.0f);
+        rotateCube=glm::mat4(1.0f);
+        translateCubeEdge=glm::mat4(1.0f);
+        translateCube1EdgeR=glm::mat4(1.0f);
+
+}
+
 /* Initialize the OpenGL rendering properties */
 /* Add all the models to be created here */
 void initGL (GLFWwindow* window, int width, int height)
@@ -1020,62 +1030,9 @@ void initGL (GLFWwindow* window, int width, int height)
     score_board.level=1;
     score_board.score=0;
     score_board.time=0;
-//    score_board.life=3;
+    score_board.life=3;
 
-//    initaliseVariables();
-//initialise and create tiles
-    int i,j;
-    int level=score_board.level;
-    float cube_initial_posX=0,cube_initial_posY=0,cube_initial_posZ=0.0;
-    for(i=1;i<=10;i++)
-        for(j=1;j<=10;j++)
-        {
-            //printf("%d",tile_for_level[level][i][j] );
-            if(tile_for_level[level][i][j])
-            {
-                //printf("f\n");
-                int tile_num=tile_for_level[level][i][j];
-                tile* new_tile=new tile;
-                new_tile->x=board.x+(new_tile->width)*(i-1);
-                new_tile->y=board.y+(new_tile->width)*(j-1);
-                new_tile->z=board.z;
-                //(new_tile.color_top)=(tile_info[tile_num].color_top);
-                //(new_tile.color_base)=(tile_info[tile_num].color_base);
-                //(new_tile.color_side)=(tile_info[tile_num].color_side);
-                new_tile->type=tile_num;
-                new_tile->object=createTile(new_tile);
-                tiles_on_display.push_back(*new_tile);
-                if(cube_initial_posX==0.0 && cube_initial_posY==0.0 && cube_initial_posZ==0.0)
-                {
-                    cube_initial_posX=new_tile->x;
-                    cube_initial_posY=new_tile->y;
-                    cube_initial_posZ=new_tile->z;
-                }
-            }
-        }
-
-//cube1
-    cube1.x=cube_initial_posX;
-    cube1.y=cube_initial_posY;
-    cube1.width=tile_width;
-    cube1.height=tile_width;
-    cube1.z=cube_initial_posZ+cube1.height;
-    cube1.rotationX=0.0;
-    cube1.rotationY=0.0;
-    cube1.object=createCube(&cube1);
-
-//cube2
-    cube2.x=cube_initial_posX;
-    cube2.y=cube_initial_posY;
-    cube2.z=cube_initial_posZ+tile_width;
-    cube2.width=tile_width;
-    cube2.height=tile_width;
-    cube2.object=createCube(&cube2);
-
-    //cuboid
-        cuboid_lengthX=cube1.width;
-        cuboid_lengthY=cube1.width;
-        cuboid_lengthZ=2*cube1.width;
+    initialiseVariables();
 
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -1104,6 +1061,14 @@ void check_cube_fall()
     bool fall=true;
     for(;i!=tiles_on_display.end();++i)
     {
+        //block in square hole
+        if((i->type)==2)
+        {
+            if( cube1.x == i->x && cube1.y == i->y /*&& cuboid_lengthX == tile_width && cuboid_lengthY == tile_width*/ )
+            {
+                return update_level();
+            }
+        }
         if( cube1.x == i->x && cube1.y == i->y )
         {
                 //cube on a tile
@@ -1132,10 +1097,27 @@ void check_cube_fall()
 
     if(fall==true)
     {
-        //life--;
+        score_board.life-=1;
         //start again
-        terminate();
+        if(score_board.life==0)
+            terminate();
+        else
+        {
+            //start again
+            initialiseVariables();
+        }
     }
+}
+
+void update_level()
+{
+    score_board.level+=1;
+
+    printf("high\n");
+    if(score_board.level>2)
+        //win
+        terminate();
+    initialiseVariables();
 }
 
 int main (int argc, char** argv)
