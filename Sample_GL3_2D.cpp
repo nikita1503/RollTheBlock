@@ -56,7 +56,7 @@ list<tile> tiles_on_display;
 typedef struct cubeS {
     float x,y,z;
     float width,height;
-    float rotation;
+    float rotationX,rotationY;
     VAO* object;
 }cubeS;
 cubeS cube1,cube2;
@@ -283,12 +283,43 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
     else if (action == GLFW_PRESS) {
         switch (key) {
     case GLFW_KEY_RIGHT:
-        cube1.rotation+=90;
-        cube1.x+=tile_width;
-        if (cube1.rotation==360)
-            cube1.rotation=0;
+        cube1.rotationX+=90;
+        if (cube1.rotationX>360)
+            cube1.rotationX=90;
+        if(cube1.rotationX==180 || cube1.rotationX==360)
+            cube1.x+=2*tile_width;
+        else
+            cube1.x+=tile_width;
             break;
-	case GLFW_KEY_ESCAPE:
+        case GLFW_KEY_LEFT:
+            cube1.rotationX-=90;
+            if (cube1.rotationX<-360)
+                cube1.rotationX=-90;
+            if(cube1.rotationX==-180 || cube1.rotationX==-360)
+                cube1.x-=2*tile_width;
+            else
+                cube1.x-=tile_width;
+            break;
+        case GLFW_KEY_UP:
+            cube1.rotationY-=90;
+            if (cube1.rotationY<-360)
+                cube1.rotationY=-90;
+           if(cube1.rotationY==-180 || cube1.rotationY==-360)
+                cube1.y+=2*tile_width;
+            else
+                cube1.y+=tile_width;
+            break;
+        case GLFW_KEY_DOWN:
+            cube1.rotationY+=90;
+            if (cube1.rotationY>360)
+                cube1.rotationY=90;
+            if(cube1.rotationY==180 || cube1.rotationY==360)
+                cube1.y-=2*tile_width;
+            else
+                cube1.y-=tile_width;
+            break;
+
+        case GLFW_KEY_ESCAPE:
 	    quit(window);
 	    break;
 	default:
@@ -804,49 +835,59 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     glm::mat4 rotateCube = glm::mat4(1.0f);
     glm::mat4 translateCubeEdge = glm::mat4(1.0f);
     glm::mat4 translateCube1EdgeR = glm::mat4(1.0f);
-    /*if(cube1.rotation<=-90)
-    {
-        printf("p\n");
-        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
-        translateCubeEdge *= glm::translate(glm::vec3(-1*(cube1.width),0.0,cube1.height));
-        translateCube1EdgeR *= glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
-        Matrices.model *=translateCube1EdgeR * rotateCube * translateCubeEdge;
-    }
-    if(cube1.rotation<=-180)
-    {
-    printf("q\n");
-    //rotateCube = glm::rotate((float)(-1*90*M_PI/180.0f), glm::vec3(0,0,1));
-        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
-        //translateCubeEdge *= glm::translate(glm::vec3(-1*(cube1.width),-1*(cube1.width),cube1.height));
-        translateCubeEdge = glm::translate(glm::vec3(-1*(cube1.width),0.0,cube1.height));
-        //translateCube1EdgeR *= glm::translate(glm::vec3((cube1.width),(cube1.width),-1*cube1.height));
-        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
-        Matrices.model =translateCube1EdgeR * rotateCube * translateCubeEdge * Matrices.model;
-    }
-    if(cube1.rotation<=-270)
-    {
-    printf("r\n");
-    //rotateCube = glm::rotate((float)(-1*90*M_PI/180.0f), glm::vec3(0,0,1));
-        rotateCube = glm::rotate((float)(-1*90*M_PI/180.0f), glm::vec3(0,1,0));
-        //translateCubeEdge *= glm::translate(glm::vec3(0.0,-1*(cube1.width),cube1.height));
-        translateCubeEdge *= glm::translate(glm::vec3(-1*(cube1.width),0.0,0.0));
-        //translateCube1EdgeR *= glm::translate(glm::vec3(0.0,-1*(cube1.width),-1*cube1.height));
-        translateCube1EdgeR *= glm::mat4(1.0f);
-        Matrices.model *=translateCube1EdgeR * rotateCube * translateCubeEdge;
-    }*/
 
-    for(float angle=cube1.rotation; angle>0;angle-=90)
+    //RIGHT ROTATION
+    for(float angle=90; angle<=cube1.rotationX;angle+=90)
     {
         rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
-        translateCubeEdge = glm::translate(glm::vec3(-1*(cube1.width),0.0,cube1.height));
+        float translateInX=cube1.width;
+        if(angle==180 || angle==360)
+            translateInX=2*cube1.width;
+        translateCubeEdge = glm::translate(glm::vec3(-1*(translateInX),0.0,cube1.height));
         translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
         rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-
     }
 
-    printf("%f %f %f %f\n",cube1.x,cube1.y,cube1.z,cube1.rotation );
+    //LEFT ROTATION
+    for(float angle=-90; angle>=cube1.rotationX;angle-=90)
+    {
+        rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(0,1,0));
+        float translateInX=0.0;
+        if(angle==-180 || angle==-360)
+            translateInX=cube1.width;
+        translateCubeEdge = glm::translate(glm::vec3((translateInX),0.0,cube1.height));
+        translateCube1EdgeR = glm::translate(glm::vec3(cube1.width,0.0,-1*cube1.height));
+        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+    }
+
+    //TOP ROTATION
+    for(float angle=-90; angle>=cube1.rotationY;angle-=90)
+    {
+        rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(1,0,0));
+        float translateInY=cube1.width;
+        if(angle==-180 || angle==-360)
+            translateInY=2*cube1.width;
+        translateCubeEdge = glm::translate(glm::vec3(0.0,-1*(translateInY),cube1.height));
+        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+    }
+
+    //DOWN ROTATION
+    for(float angle=90; angle<=cube1.rotationY;angle+=90)
+    {
+        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(1,0,0));
+        float translateInY=0.0;
+        if(angle==180 || angle==360)
+            translateInY=cube1.width;
+        translateCubeEdge = glm::translate(glm::vec3(0.0,(translateInY),cube1.height));
+        translateCube1EdgeR = glm::translate(glm::vec3(0.0,cube1.width,-1*cube1.height));
+        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+    }
+
+
+
+
     glm::mat4 translateCube1 = glm::translate(glm::vec3(cube1.x,cube1.y,cube1.z));
-    //glm::mat4 translateCube1 = glm::translate(glm::vec3(0.0,0.0,0.0));
     Matrices.model = translateCube1*rotationOverallCube;
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -855,10 +896,8 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     draw3DObject(cube1.object);
 
     //cube2
-//    Matrices.model = glm::mat4(1.0f);
     glm::mat4 translateonCube1 = glm::translate(glm::vec3(0.0,0.0,cube1.width));
     glm::mat4 translateCube2 = glm::translate(glm::vec3(cube1.x,cube1.y,cube1.z));
-//    glm::mat4 rotateCube2 = glm::rotate((float)(cube1.rotation*M_PI/180.0f), glm::vec3(0,0,1));
     Matrices.model = (translateCube2 * rotationOverallCube * translateonCube1);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -964,7 +1003,8 @@ void initGL (GLFWwindow* window, int width, int height)
     cube1.width=tile_width;
     cube1.height=tile_width;
     cube1.z=cube_initial_posZ+cube1.height;
-    cube1.rotation=0.0;
+    cube1.rotationX=0.0;
+    cube1.rotationY=0.0;
     cube1.object=createCube(&cube1);
 
 //cube2
