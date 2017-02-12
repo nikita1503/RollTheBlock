@@ -46,6 +46,7 @@ typedef struct COLOR
 	float g;
 	float b;
 }Color;
+COLOR black = {0/255.0,0/255.0,0/255.0};
 
 typedef struct Structure {
 	string name;
@@ -680,95 +681,208 @@ void createRectangle ()
     rectangle = create3DObject(GL_TRIANGLES, 13*3, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
-VAO* createTile (tile *curr_tile)
-{
-    float x=curr_tile->x,y=curr_tile->y,z=curr_tile->z;
-    float w=curr_tile->width,h=curr_tile->height;
-    // GL3 accepts only Triangles. Quads are not supported
-    static const GLfloat vertex_buffer_data [] = {
-	0.0, w, 0.0, //1
-	0.0, 0.0, 0.0, //2
-	w, 0.0, 0.0,  //3
-    0.0, w, 0.0, //1
-    w, 0.0, 0.0,  //3
-    w, w, 0.0,  //4
-    w, w, 0.0,  //4
-    w, 0.0, 0.0,  //3
-    w, 0.0, -1*h,  //5
-    w, w, 0.0,  //4
-    w, 0.0, -1*h,  //5
-    w, w, -1.0*h,  //6
-    w, w, -1.0*h,  //6
-    w, 0.0, -1*h,  //5
-    0.0, 0.0, -1*h,  //7
-    w, w, -1.0*h,  //6
-    0.0, 0.0, -1*h,  //7
-	0.0, w, -1*h,  //8
-    0.0, w, -1*h,  //8
-    0.0, 0.0, -1*h,  //7
-    0.0, 0.0, 0.0, //2
-    0.0, w, -1*h,  //8
-    0.0, 0.0, 0.0, //2
-    0.0, w, 0.0, //1
-    0.0, w, -1*h,  //8
-    0.0, w, 0.0, //1
-    w, w, 0.0,  //4
-    0.0, w, -1*h,  //8
-    w, w, 0.0,  //4
-    w, w, -1.0*h,  //6
-    0.0, 0.0, 0.0, //2
-    0.0, 0.0, -1*h,  //7
-    w, 0.0, -1*h,  //5
-    0.0, 0.0, 0.0, //2
-    w, 0.0, -1*h,  //5
-    w, 0.0, 0.0,  //3
-	};
+struct object  createTile(string name,float x_pos,float y_pos,float z_pos,float l, float b, float h,COLOR L,COLOR R,COLOR T,string component,GLenum fill_mode=GL_FILL,int typeofstage=0){
+    GLfloat a[]={
 
-    static const GLfloat color_buffer_data [] = {
-	1.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 0.0f,
-	1.0f, 0.0f, 1.0f,
-	1.0f, 0.0f, 1.0f,
-	1.0f, 0.0f, 1.0f,
-	1.0f, 0.0f, 1.0f,
-	1.0f, 0.0f, 1.0f,
-	1.0f, 0.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	1.0f, 0.0f, 0.0f,
-	1.0f, 0.0f, 0.0f,
-	1.0f, 0.0f, 0.0f,
-	1.0f, 0.0f, 0.0f,
-	1.0f, 0.0f, 0.0f,
-	1.0f, 0.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0, 0, 0,
-	0, 0, 0,
-	1, 1, 1,
+            /* Rectangle 1 */
+
+            -l, -b, -h,
+            -l, -b, h,
+            l, -b, h,
+            l, -b, h,
+            l, -b, -h,
+            -l, -b, -h,
+
+            /* Rectangle 2 */
+
+            l, b, -h,
+            l, b, h,
+            l, -b, h,
+            l, -b, h,
+            l, -b, -h,
+            l, b, -h,
+
+            /* Rectangle 3 */
+
+            -l, b, -h,
+            -l, b, h,
+            l, b, h,
+            l, b, h,
+            l, b, -h,
+            -l, b, -h,
+
+            /* Rectangle 4 */
+
+            -l, b, -h,
+            -l, b, h,
+            -l, -b, h,
+            -l, -b, h,
+            -l, -b, -h,
+            -l, b, -h,
+
+            /* Rectangle 5 */
+
+            -l, -b, -h,
+            -l, b, -h,
+            l, b, -h,
+            l, b, -h,
+            l, -b, -h,
+            -l, -b, -h,
+
+            /* Rectangle 6 */
+            -l, -b, h,
+            -l, b, h,
+            l, b, h,
+            l, b, h,
+            l, -b, h,
+            -l, -b, h,
+
+    };
+    GLfloat C[]={
+            /* Rectangle 1 (Bottom)*/
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+
+            /* Rectangle 2 (left)*/
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+
+
+
+            /* Rectangle 3  (Top layer)*/
+
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+
+            /* Rectangle 4 */
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+
+            /* Rectangle 5 (right)*/
+
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+
+            /* Rectangle 6 */
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+
+
+    };
+    T=black;
+    R=black;
+    L=black;
+    GLfloat C2[]={
+            /* Rectangle 1 (Bottom)*/
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+
+            /* Rectangle 2 (left)*/
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+
+
+
+            /* Rectangle 3  (Top layer)*/
+
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+            T.r, T.g, T.b,
+
+            /* Rectangle 4 */
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+            L.r, L.g, L.b,
+
+            /* Rectangle 5 (right)*/
+
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+
+            /* Rectangle 6 */
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+            R.r, R.g, R.b,
+
+
     };
 
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    return create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color_buffer_data, GL_FILL);
+    VAO *myobject = create3DObject(GL_TRIANGLES,  6*6,  a,  C,  fill_mode);
+    VAO *mylinesobjects=create3DObject(GL_TRIANGLES,  6*6,  a,  C2,  GL_LINE);
+    object vishsprite = {};
+
+
+    vishsprite.name = name;
+    vishsprite.object = myobject;
+    vishsprite.borderobject = mylinesobjects;
+    vishsprite.x=x_pos;
+    vishsprite.y=y_pos;
+    vishsprite.z=z_pos;
+    vishsprite.status=1;
+    vishsprite.fixed=0;
+    vishsprite.x_scale=l;
+    vishsprite.y_scale=b;
+    vishsprite.z_scale=h;
+    vishsprite.x_speed=0;
+    vishsprite.y_speed=0;
+    vishsprite.z_speed=0;
+    vishsprite.typeofstage=typeofstage;
+    vishsprite.status=1;
+    vishsprite.angle=0;
+    /*if(component=="cube")
+        cube[name]=vishsprite;
+    if(component=="stage"){
+        stage[name]=vishsprite;
+    }*/
+    return vishsprite;
+
 }
+
 
 VAO* createCube (cubeS* curr_cube)
 {
@@ -1132,7 +1246,7 @@ void initialiseVariables()
                     //(new_tile.color_base)=(tile_info[tile_num].color_base);
                     //(new_tile.color_side)=(tile_info[tile_num].color_side);
                     new_tile->type=tile_num;
-                    new_tile->object=createTile(new_tile);
+                    new_tile->object=createTile("tile",0.0,0.0,0.0,new_tile->width,new_tile->width,new_tile->height,black,black,black,"tile");
                     tiles_on_display.push_back(*new_tile);
                     if(cube_initial_posX==0.0 && cube_initial_posY==0.0 && cube_initial_posZ==0.0 && new_tile->type!=2)
                     {
@@ -1191,7 +1305,6 @@ void initGL (GLFWwindow* window, int width, int height)
     score_board.moves=0;
 
     initialiseVariables();
-    COLOR black = {0/255.0,0/255.0,0/255.0};
     float height1 = 0.02f;
 	float width1 = 0.2f;
 	createRectangleScore("top",0,black,black,black,black,0,0.2,height1,width1,"score");
