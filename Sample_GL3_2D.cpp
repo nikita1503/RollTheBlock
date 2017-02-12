@@ -46,7 +46,6 @@ typedef struct COLOR
 	float g;
 	float b;
 }Color;
-COLOR black = {0/255.0,0/255.0,0/255.0};
 
 typedef struct Structure {
 	string name;
@@ -681,208 +680,120 @@ void createRectangle ()
     rectangle = create3DObject(GL_TRIANGLES, 13*3, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
-struct object  createTile(string name,float x_pos,float y_pos,float z_pos,float l, float b, float h,COLOR L,COLOR R,COLOR T,string component,GLenum fill_mode=GL_FILL,int typeofstage=0){
-    GLfloat a[]={
+VAO* createTile (tile *curr_tile)
+{
+    float x=curr_tile->x,y=curr_tile->y,z=curr_tile->z;
+    float w=curr_tile->width-0.01,h=curr_tile->height;
+    int type=curr_tile->type;
+    // GL3 accepts only Triangles. Quads are not supported
+    static const GLfloat vertex_buffer_data [] = {
+    //Top
+	0.0, w, 0.0, //1
+	0.0, 0.0, 0.0, //2
+	w, 0.0, 0.0,  //3
+    0.0, w, 0.0, //1
+    w, 0.0, 0.0,  //3
+    w, w, 0.0,  //4
+    //Right
+    w, w, 0.0,  //4
+    w, 0.0, 0.0,  //3
+    w, 0.0, -1*h,  //5
+    w, w, 0.0,  //4
+    w, 0.0, -1*h,  //5
+    w, w, -1.0*h,  //6
+    //Bottom
+    w, w, -1.0*h,  //6
+    w, 0.0, -1*h,  //5
+    0.0, 0.0, -1*h,  //7
+    w, w, -1.0*h,  //6
+    0.0, 0.0, -1*h,  //7
+	0.0, w, -1*h,  //8
+    //Left
+    0.0, w, -1*h,  //8
+    0.0, 0.0, -1*h,  //7
+    0.0, 0.0, 0.0, //2
+    0.0, w, -1*h,  //8
+    0.0, 0.0, 0.0, //2
+    0.0, w, 0.0, //1
+    //Up
+    0.0, w, -1*h,  //8
+    0.0, w, 0.0, //1
+    w, w, 0.0,  //4
+    0.0, w, -1*h,  //8
+    w, w, 0.0,  //4
+    w, w, -1.0*h,  //6
+    //Down
+    0.0, 0.0, 0.0, //2
+    0.0, 0.0, -1*h,  //7
+    w, 0.0, -1*h,  //5
+    0.0, 0.0, 0.0, //2
+    w, 0.0, -1*h,  //5
+    w, 0.0, 0.0,  //3
+	};
 
-            /* Rectangle 1 */
+    float base[3],top[3],side[3];
+    printf("type-%d\n",type );
+    base[0]=tile_info[type].color_base[0];
+    base[1]=tile_info[type].color_base[1];
+    base[2]=tile_info[type].color_base[2];
 
-            -l, -b, -h,
-            -l, -b, h,
-            l, -b, h,
-            l, -b, h,
-            l, -b, -h,
-            -l, -b, -h,
+    top[0]=tile_info[type].color_top[0];
+    top[1]=tile_info[type].color_top[1];
+    top[2]=tile_info[type].color_top[2];
 
-            /* Rectangle 2 */
-
-            l, b, -h,
-            l, b, h,
-            l, -b, h,
-            l, -b, h,
-            l, -b, -h,
-            l, b, -h,
-
-            /* Rectangle 3 */
-
-            -l, b, -h,
-            -l, b, h,
-            l, b, h,
-            l, b, h,
-            l, b, -h,
-            -l, b, -h,
-
-            /* Rectangle 4 */
-
-            -l, b, -h,
-            -l, b, h,
-            -l, -b, h,
-            -l, -b, h,
-            -l, -b, -h,
-            -l, b, -h,
-
-            /* Rectangle 5 */
-
-            -l, -b, -h,
-            -l, b, -h,
-            l, b, -h,
-            l, b, -h,
-            l, -b, -h,
-            -l, -b, -h,
-
-            /* Rectangle 6 */
-            -l, -b, h,
-            -l, b, h,
-            l, b, h,
-            l, b, h,
-            l, -b, h,
-            -l, -b, h,
-
-    };
-    GLfloat C[]={
-            /* Rectangle 1 (Bottom)*/
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-
-            /* Rectangle 2 (left)*/
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-
-
-
-            /* Rectangle 3  (Top layer)*/
-
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-
-            /* Rectangle 4 */
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-
-            /* Rectangle 5 (right)*/
-
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-
-            /* Rectangle 6 */
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-
-
-    };
-    T=black;
-    R=black;
-    L=black;
-    GLfloat C2[]={
-            /* Rectangle 1 (Bottom)*/
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-
-            /* Rectangle 2 (left)*/
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-
-
-
-            /* Rectangle 3  (Top layer)*/
-
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
-
-            /* Rectangle 4 */
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
-
-            /* Rectangle 5 (right)*/
-
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-
-            /* Rectangle 6 */
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-            R.r, R.g, R.b,
-
-
+    side[0]=tile_info[type].color_side[0];
+    side[1]=tile_info[type].color_side[1];
+    side[2]=tile_info[type].color_side[2];
+    if(type==3)
+    printf("%f %f %f, %f %f %f, %f %f %f", base[0],base[1],base[2],top[1],top[1],top[2],side[0],side[1],side[2]);
+    GLfloat color_buffer_data [] = {
+    //Top
+    base[0],base[1],base[2],
+	base[0],base[1],base[2],
+	base[0],base[1],base[2],
+	base[0],base[1],base[2],
+	base[0],base[1],base[2],
+	base[0],base[1],base[2],
+    //Right
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+    //Bottom
+	top[0],top[1],top[2],
+    top[0],top[1],top[2],
+	top[0],top[1],top[2],
+	top[0],top[1],top[2],
+	top[0],top[1],top[2],
+	top[0],top[1],top[2],
+    //Left
+    side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+	side[0],side[1],side[2],
+    //Up
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    //Down
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
+    side[0],side[1],side[2],
     };
 
-    VAO *myobject = create3DObject(GL_TRIANGLES,  6*6,  a,  C,  fill_mode);
-    VAO *mylinesobjects=create3DObject(GL_TRIANGLES,  6*6,  a,  C2,  GL_LINE);
-    object vishsprite = {};
-
-
-    vishsprite.name = name;
-    vishsprite.object = myobject;
-    vishsprite.borderobject = mylinesobjects;
-    vishsprite.x=x_pos;
-    vishsprite.y=y_pos;
-    vishsprite.z=z_pos;
-    vishsprite.status=1;
-    vishsprite.fixed=0;
-    vishsprite.x_scale=l;
-    vishsprite.y_scale=b;
-    vishsprite.z_scale=h;
-    vishsprite.x_speed=0;
-    vishsprite.y_speed=0;
-    vishsprite.z_speed=0;
-    vishsprite.typeofstage=typeofstage;
-    vishsprite.status=1;
-    vishsprite.angle=0;
-    /*if(component=="cube")
-        cube[name]=vishsprite;
-    if(component=="stage"){
-        stage[name]=vishsprite;
-    }*/
-    return vishsprite;
-
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    return create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
-
 
 VAO* createCube (cubeS* curr_cube)
 {
@@ -1101,7 +1012,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
         glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
         // draw3DObject draws the VAO given to it using current MVP matrix
-        if(i->type==1)
+        if(i->type!=0 && i->type!=2)
             draw3DObject((*i).object);
     }
 
@@ -1246,7 +1157,7 @@ void initialiseVariables()
                     //(new_tile.color_base)=(tile_info[tile_num].color_base);
                     //(new_tile.color_side)=(tile_info[tile_num].color_side);
                     new_tile->type=tile_num;
-                    new_tile->object=createTile("tile",0.0,0.0,0.0,new_tile->width,new_tile->width,new_tile->height,black,black,black,"tile");
+                    new_tile->object=createTile(new_tile);
                     tiles_on_display.push_back(*new_tile);
                     if(cube_initial_posX==0.0 && cube_initial_posY==0.0 && cube_initial_posZ==0.0 && new_tile->type!=2)
                     {
@@ -1305,6 +1216,7 @@ void initGL (GLFWwindow* window, int width, int height)
     score_board.moves=0;
 
     initialiseVariables();
+    COLOR black = {0/255.0,0/255.0,0/255.0};
     float height1 = 0.02f;
 	float width1 = 0.2f;
 	createRectangleScore("top",0,black,black,black,black,0,0.2,height1,width1,"score");
@@ -1351,27 +1263,41 @@ void check_cube_fall()
                 return update_level();
             }
         }
-        if( cube1.x == i->x && cube1.y == i->y )
+        //normal tile
+        if(i->type==1)
         {
+            if( cube1.x == i->x && cube1.y == i->y )
+            {
                 //cube on a tile
                 fall=false;
                 break;
-        }
-        else if( cuboid_lengthX > tile_width )
-        {
-            if( cube1.x + tile_width == i->x && cube1.y == i->y )
+            }
+            else if( cuboid_lengthX > tile_width )
             {
-                //cube in tile
-                fall=false;
-                break;
+                if( cube1.x + tile_width == i->x && cube1.y == i->y )
+                {
+                    //cube in tile
+                    fall=false;
+                    break;
+                }
+            }
+            else if( cuboid_lengthY > tile_width )
+            {
+                if( cube1.y + tile_width == i->y && cube1.x == i->x )
+                {
+                    //cube in tile
+                    fall=false;
+                    break;
+                }
             }
         }
-        else if( cuboid_lengthY > tile_width )
+        //fragie tile
+        if(i->type==3)
         {
-            if( cube1.y + tile_width == i->y && cube1.x == i->x )
+            //block vertically on tile
+            if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
             {
-                //cube in tile
-                fall=false;
+                fall=true;
                 break;
             }
         }

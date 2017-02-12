@@ -4,7 +4,7 @@ typedef struct tile_infoS {
     float color_top[3];
     float color_side[3];
 }tile_infoS;
-extern tile_infoS tile_info[3];
+extern tile_infoS tile_info[6];
 
 
 extern int tile_for_level[3][11][11];

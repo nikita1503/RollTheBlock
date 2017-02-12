@@ -1,11 +1,11 @@
 #include <iostream>
 #include "tile_info.h"
 
-tile_infoS tile_info[3];
+tile_infoS tile_info[6];
 int tile_for_level[3][11][11];
 void initalise_tile_for_levels()
 {
-
+    //normal tile
     tile_info[1].color_base[0]=1.0;
     tile_info[1].color_base[1]=1.0;
     tile_info[1].color_base[2]=1.0;
@@ -18,6 +18,18 @@ void initalise_tile_for_levels()
     tile_info[1].color_side[1]=0.0;
     tile_info[1].color_side[2]=1.0;
 
+    //fragile tile
+    tile_info[3].color_base[0]=0.0;
+    tile_info[3].color_base[1]=0.0;
+    tile_info[3].color_base[2]=0.0;
+
+    tile_info[3].color_top[0]=0.0;
+    tile_info[3].color_top[1]=0.0;
+    tile_info[3].color_top[2]=0.0;
+
+    tile_info[3].color_side[0]=0.0;
+    tile_info[3].color_side[1]=0.0;
+    tile_info[3].color_side[2]=0.0;
 
     //LEVEL 1
     tile_for_level[1][1][1]=1;
@@ -36,7 +48,7 @@ void initalise_tile_for_levels()
     tile_for_level[1][2][3]=1;
     tile_for_level[1][2][4]=1;
     tile_for_level[1][2][5]=1;
-    tile_for_level[1][2][6]=1;
+    tile_for_level[1][2][6]=3;
     tile_for_level[1][2][7]=1;
     tile_for_level[1][2][8]=1;
     tile_for_level[1][2][9]=1;
@@ -56,7 +68,7 @@ void initalise_tile_for_levels()
     tile_for_level[1][4][1]=0;
     tile_for_level[1][4][2]=0;
     tile_for_level[1][4][3]=1;
-    tile_for_level[1][4][4]=1;
+    tile_for_level[1][4][4]=3;
     tile_for_level[1][4][5]=1;
     tile_for_level[1][4][6]=1;
     tile_for_level[1][4][7]=1;
