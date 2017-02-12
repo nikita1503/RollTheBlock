@@ -11,6 +11,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <map>
+
 
 #include <list>
 #include "tile_info.h"
@@ -37,6 +39,26 @@ struct GLMatrices {
     glm::mat4 view;
     GLuint MatrixID;
 } Matrices;
+
+typedef struct COLOR
+{
+	float r;
+	float g;
+	float b;
+}Color;
+
+typedef struct Structure {
+	string name;
+	COLOR color;
+	float x,y;
+	VAO* object;
+	int status;
+	float height,width;
+	int tone;
+}Structure;
+
+map <string, Structure> TEXT;
+
 
 int proj_type;
 int do_rot, floor_rel;;
@@ -67,7 +89,7 @@ float cuboid_lengthX,cuboid_lengthY,cuboid_lengthZ;
 
 
 typedef struct score_boardS {
-    int score,level,life;
+    int score,level,life,moves;
     float time;
 }score_boardS;
 score_boardS score_board;
@@ -187,6 +209,7 @@ void initGLEW(void){
 
 
 
+
 /* Generate VAO, VBOs and return VAO handle */
 struct VAO* create3DObject (GLenum primitive_mode, int numVertices, const GLfloat* vertex_buffer_data, const GLfloat* color_buffer_data, GLenum fill_mode=GL_FILL)
 {
@@ -295,6 +318,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
     else if (action == GLFW_PRESS) {
         switch (key) {
     case GLFW_KEY_RIGHT:
+        score_board.moves+=1;
         cube1.rotationX+=90;
         if (cube1.rotationX>360)
             cube1.rotationX=90;
@@ -315,6 +339,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 
         break;
         case GLFW_KEY_LEFT:
+            score_board.moves+=1;
             cube1.rotationX-=90;
             if (cube1.rotationX<-360)
                 cube1.rotationX=-90;
@@ -340,6 +365,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             check_cube_fall();
             break;
         case GLFW_KEY_UP:
+            score_board.moves+=1;
             cube1.rotationY-=90;
             if (cube1.rotationY<-360)
                 cube1.rotationY=-90;
@@ -358,6 +384,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             check_cube_fall();
             break;
         case GLFW_KEY_DOWN:
+            score_board.moves+=1;
             cube1.rotationY+=90;
             if (cube1.rotationY>360)
                 cube1.rotationY=90;
@@ -483,6 +510,83 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
 }
 
 VAO *rectangle, *cam, *floor_vao;
+
+void createRectangleScore (string name, int tone, COLOR colorA, COLOR colorB, COLOR colorC, COLOR colorD, float x, float y, float height, float width, string component)
+{
+	// GL3 accepts only Triangles. Quads are not supported
+	float w=width/2,h=height/2;
+	GLfloat vertex_buffer_data [] = {
+		-w,-h,0, // vertex 1
+		-w,h,0, // vertex 2
+		w,h,0, // vertex 3
+
+		w,h,0, // vertex 3
+		w,-h,0, // vertex 4
+		-w,-h,0  // vertex 1
+	};
+
+	GLfloat color_buffer_data [] = {
+		colorA.r,colorA.g,colorA.b, // color 1
+		colorB.r,colorB.g,colorB.b, // color 2
+		colorC.r,colorC.g,colorC.b, // color 3
+
+		colorC.r,colorC.g,colorC.b, // color 4
+		colorD.r,colorD.g,colorD.b, // color 5
+		colorA.r,colorA.g,colorA.b // color 6
+	};
+
+	// create3DObject creates and returns a handle to a VAO that can be used later
+	VAO *rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+	Structure vishsprite = {};
+	vishsprite.color = colorA;
+	vishsprite.name = name;
+	vishsprite.object = rectangle;
+	vishsprite.x=x;
+	vishsprite.y=y;
+	vishsprite.height=height;
+	vishsprite.width=width;
+	vishsprite.status=1;
+	vishsprite.tone=tone;
+
+	if(component=="score")
+		TEXT[name] = vishsprite;
+}
+
+void setStroke(char val){
+	TEXT["top"].status=0;
+	TEXT["bottom"].status=0;
+	TEXT["middle"].status=0;
+	TEXT["left1"].status=0;
+	TEXT["left2"].status=0;
+	TEXT["right1"].status=0;
+	TEXT["right2"].status=0;
+	TEXT["middle1"].status=0;
+	TEXT["middle2"].status=0;
+	if( val=='O' || val=='0' || val=='2' || val=='3' || val=='5' || val=='6'|| val=='7' || val=='8' || val=='9'){
+		TEXT["top"].status=1;
+		//cout << "entry" << endl;
+	}
+	if( val=='2' || val=='3' || val=='4' || val=='5' || val=='6' || val=='8' || val=='9'){
+		TEXT["middle"].status=1;
+	}
+	if( val=='0' || val=='2' || val=='3' || val=='5' || val=='6' || val=='8' || val=='9'){
+		TEXT["bottom"].status=1;
+	}
+	if( val=='0' || val=='4' || val=='5' || val=='6' || val=='8' || val=='9' ){
+		TEXT["left1"].status=1;
+	}
+	if(val=='0' || val=='2' || val=='6' || val=='8'){
+		TEXT["left2"].status=1;
+	}
+	if(val=='O' || val=='0' || val=='1' || val=='2' || val=='3' || val=='4' || val=='7' || val=='8' || val=='9'){
+		TEXT["right1"].status=1;
+	}
+	if( val=='0' || val=='1' || val=='3' || val=='4' || val=='5' || val=='6' || val=='7' || val=='8' || val=='9'){
+		TEXT["right2"].status=1;
+	}
+
+}
+
 
 // Creates the rectangle object used in this sample code
 void createRectangle ()
@@ -916,6 +1020,59 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     // draw3DObject draws the VAO given to it using current MVP matrix
     //draw3DObject(floor_vao);
 
+    int k,score=score_board.moves;
+	for(k=1;k<=4;k++)
+	{
+		float translation;
+		float translation1=3.7f;
+		if(k==1)
+		{
+			int temp=score%10;
+			setStroke(temp+'0');
+			translation=3.4f;
+		}
+		else if(k==2)
+		{
+			int temp=(score/10)%10;
+			setStroke(temp+'0');
+			translation=3.0;
+		}
+		else if(k==3)
+		{
+			int temp=(score/100)%10;
+			setStroke(temp+'0');
+			translation=2.6;
+		}
+		else if(k==4)
+		{
+			int temp=(score/1000)%10;
+			setStroke(temp+'0');
+			translation=2.2;
+		}
+
+		for(map<string,Structure>::iterator it=TEXT.begin();it!=TEXT.end();it++){
+			string current = it->first;
+			if(TEXT[current].status==1)
+			{
+				//    cout << "1" << endl;
+				glm::mat4 MVP;  // MVP = Projection * View * Model
+
+				Matrices.model = glm::mat4(1.0f);
+
+
+				glm::mat4 ObjectTransform;
+				glm::mat4 translateObject = glm::translate (glm::vec3(TEXT[current].x+translation,TEXT[current].y+translation1  ,0.0f)); // glTranslatef
+				// glm::mat4 rotateTriangle = glm::rotate((float)((TEXT[current].curr_angle)*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
+				ObjectTransform=translateObject;
+				Matrices.model *= ObjectTransform;
+				MVP = VP * Matrices.model; // MVP = p * V * M
+
+				glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+				draw3DObject(TEXT[current].object);
+			}
+		}
+	}
+
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -1031,8 +1188,20 @@ void initGL (GLFWwindow* window, int width, int height)
     score_board.score=0;
     score_board.time=0;
     score_board.life=3;
+    score_board.moves=0;
 
     initialiseVariables();
+    COLOR black = {0/255.0,0/255.0,0/255.0};
+    float height1 = 0.02f;
+	float width1 = 0.2f;
+	createRectangleScore("top",0,black,black,black,black,0,0.2,height1,width1,"score");
+	createRectangleScore("bottom",0,black,black,black,black,0,-0.2,height1,width1,"score");
+	createRectangleScore("middle",0,black,black,black,black,0,0,height1,width1,"score");
+	createRectangleScore("left1",0,black,black,black,black,-0.1,0.1,width1,height1,"score");
+	createRectangleScore("left2",0,black,black,black,black,-0.1,-0.1,width1,height1,"score");
+	createRectangleScore("right1",0,black,black,black,black,0.1,0.1,width1,height1,"score");
+	createRectangleScore("right2",0,black,black,black,black,0.1,-0.1,width1,height1,"score");
+
 
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );

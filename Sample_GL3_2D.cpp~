@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <map>
 
 using namespace std;
 
@@ -149,8 +150,8 @@ struct VAO* create3DObject (GLenum primitive_mode, int numVertices, const GLfloa
     glGenBuffers (1, &(vao->VertexBuffer)); // VBO - vertices
     glGenBuffers (1, &(vao->ColorBuffer));  // VBO - colors
 
-    glBindVertexArray (vao->VertexArrayID); // Bind the VAO 
-    glBindBuffer (GL_ARRAY_BUFFER, vao->VertexBuffer); // Bind the VBO vertices 
+    glBindVertexArray (vao->VertexArrayID); // Bind the VAO
+    glBindBuffer (GL_ARRAY_BUFFER, vao->VertexBuffer); // Bind the VBO vertices
     glBufferData (GL_ARRAY_BUFFER, 3*numVertices*sizeof(GLfloat), vertex_buffer_data, GL_STATIC_DRAW); // Copy the vertices into VBO
     glVertexAttribPointer(
                           0,                  // attribute 0. Vertices
@@ -161,7 +162,7 @@ struct VAO* create3DObject (GLenum primitive_mode, int numVertices, const GLfloa
                           (void*)0            // array buffer offset
                           );
 
-    glBindBuffer (GL_ARRAY_BUFFER, vao->ColorBuffer); // Bind the VBO colors 
+    glBindBuffer (GL_ARRAY_BUFFER, vao->ColorBuffer); // Bind the VBO colors
     glBufferData (GL_ARRAY_BUFFER, 3*numVertices*sizeof(GLfloat), color_buffer_data, GL_STATIC_DRAW);  // Copy the vertex colors
     glVertexAttribPointer(
                           1,                  // attribute 1. Color
@@ -301,13 +302,13 @@ VAO *rectangle, *cam;
 
 // Creates the rectangle object used in this sample code
 void createRectangle ()
-{
+    {
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
-	-0.5, 0.5, 0.5, 
-	-0.5, -0.5, 0.5, 
+	-0.5, 0.5, 0.5,
+	-0.5, -0.5, 0.5,
 	0.5, -0.5, 0.5,
-	-0.5, 0.5, 0.5, 
+	-0.5, 0.5, 0.5,
 	0.5, -0.5, 0.5,
 	0.5, 0.5, 0.5,
 	0.5, 0.5, 0.5,
@@ -324,20 +325,20 @@ void createRectangle ()
 	-0.5, 0.5, -0.5,
 	-0.5, 0.5, -0.5,
 	-0.5, -0.5, -0.5,
-	-0.5, -0.5, 0.5, 
+	-0.5, -0.5, 0.5,
 	-0.5, 0.5, -0.5,
-	-0.5, -0.5, 0.5, 
-	-0.5, 0.5, 0.5, 
+	-0.5, -0.5, 0.5,
+	-0.5, 0.5, 0.5,
 	-0.5, 0.5, -0.5,
-	-0.5, 0.5, 0.5, 
+	-0.5, 0.5, 0.5,
 	0.5, 0.5, 0.5,
 	-0.5, 0.5, -0.5,
 	0.5, 0.5, 0.5,
 	0.5, 0.5, -0.5,
-	-0.5, -0.5, 0.5, 
+	-0.5, -0.5, 0.5,
 	-0.5, -0.5, -0.5,
 	0.5, -0.5, -0.5,
-	-0.5, -0.5, 0.5, 
+	-0.5, -0.5, 0.5,
 	0.5, -0.5, -0.5,
 	0.5, -0.5, 0.5,
 	-0.5, 0.5, 0.5,
@@ -370,12 +371,12 @@ void createRectangle ()
 	1.0f, 0.0f, 0.0f,
 	1.0f, 0.0f, 0.0f,
 	1.0f, 0.0f, 0.0f,
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
-	0.0f, 1.0f, 0.0f,	
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
@@ -395,7 +396,7 @@ void createCam ()
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
 	-0.1, 0, 0,
-	0.1, 0, 0, 
+	0.1, 0, 0,
 	0, 0.1, 0,
     };
 
@@ -520,13 +521,13 @@ void initGL (GLFWwindow* window, int width, int height)
     // Create the models
     createRectangle ();
     createCam();
-	
+
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
 
-	
+
     reshapeWindow (window, width, height);
 
     // Background color of the scene
