@@ -16,3 +16,4 @@
 #include <list>
 
 void update_level();
+void rotate();

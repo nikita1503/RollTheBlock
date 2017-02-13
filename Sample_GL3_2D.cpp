@@ -68,6 +68,7 @@ typedef struct cubeS {
 }cubeS;
 cubeS cube1,cube2;
 float cuboid_lengthX,cuboid_lengthY,cuboid_lengthZ;
+int direction;
 
 //extern int tile_for_level[3][11][11];
 
@@ -304,89 +305,19 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
         switch (key) {
     case GLFW_KEY_RIGHT:
         score_board.moves+=1;
-        cube1.rotationX+=90;
-        if (cube1.rotationX>360)
-            cube1.rotationX=90;
-        cube1.x+=cuboid_lengthX;
-
-        //matrices
-        rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
-        translateInX=cuboid_lengthX;
-        translateCubeEdge = glm::translate(glm::vec3(-1*(translateInX),0.0,cube1.height));
-        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
-        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-
-        //interchange cuboid z x lenghts
-        temp=cuboid_lengthZ;
-        cuboid_lengthZ=cuboid_lengthX;
-        cuboid_lengthX=temp;
-        check_cube_fall();
-
+        direction=1;
         break;
         case GLFW_KEY_LEFT:
             score_board.moves+=1;
-            cube1.rotationX-=90;
-            if (cube1.rotationX<-360)
-                cube1.rotationX=-90;
-
-            //Matrices
-            rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(0,1,0));
-            translateInX=cuboid_lengthZ;
-            translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.height));
-            translateCube1EdgeR = glm::translate(glm::vec3(cuboid_lengthZ,0.0,-1*cube1.height));
-            rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-
-
-            //interchange cuboid z x lenghts
-            temp=cuboid_lengthZ;
-            cuboid_lengthZ=cuboid_lengthX;
-            cuboid_lengthX=temp;
-
-            //position cube1
-            cube1.x-=cuboid_lengthX;
-            //position cube2
-
-            //if(cube1.rotationX)
-            check_cube_fall();
+            direction=2;
             break;
         case GLFW_KEY_UP:
             score_board.moves+=1;
-            cube1.rotationY-=90;
-            if (cube1.rotationY<-360)
-                cube1.rotationY=-90;
-            cube1.y+=cuboid_lengthY;
-
-            rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(1,0,0));
-            translateInY=cuboid_lengthY;
-            translateCubeEdge = glm::translate(glm::vec3(0.0,-1*(translateInY),cube1.height));
-            translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
-            rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-
-            //interchange cuboid z x lenghts
-            temp=cuboid_lengthZ;
-            cuboid_lengthZ=cuboid_lengthY;
-            cuboid_lengthY=temp;
-            check_cube_fall();
+            direction=3;
             break;
         case GLFW_KEY_DOWN:
             score_board.moves+=1;
-            cube1.rotationY+=90;
-            if (cube1.rotationY>360)
-                cube1.rotationY=90;
-
-            //matrices
-            rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(1,0,0));
-            translateInY=cuboid_lengthZ;
-            translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.height));
-            translateCube1EdgeR = glm::translate(glm::vec3(0.0,translateInY,-1*cube1.height));
-            rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
-            //interchange cuboid z x lenghts
-            temp=cuboid_lengthZ;
-            cuboid_lengthZ=cuboid_lengthY;
-            cuboid_lengthY=temp;
-            //position cube1
-            cube1.y-=cuboid_lengthY;
-            check_cube_fall();
+        direction=4;
             break;
 
         case GLFW_KEY_ESCAPE:
@@ -408,22 +339,22 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
 	break;
     case 'j':
     case 'J':
-    cube1.x-=tile_width;
+    cube1.x-=2*tile_width;
     check_cube_fall();
     break;
     case 'k':
     case 'K':
-    cube1.x+=tile_width;
+    cube1.x+=2*tile_width;
     check_cube_fall();
     break;
     case 'u':
     case 'U':
-    cube1.y+=tile_width;
+    cube1.y+=2*tile_width;
     check_cube_fall();
     break;
     case 'i':
     case 'I':
-    cube1.y-=tile_width;
+    cube1.y-=2*tile_width;
     check_cube_fall();
     break;
 case ' ':
@@ -980,6 +911,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
         }
     }
 
+    rotate();
     //cube1
     Matrices.model = glm::mat4(1.0f);
 
@@ -1062,6 +994,42 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
 		}
 	}
 
+    /** LEVEL **/
+	for(k=1;k<=1;k++)
+	{
+		float translation;
+		float translation1=3.7f;
+		if(k==1)
+		{
+			int temp=score_board.level%10;
+			setStroke(temp+'0');
+			translation=-3.4f;
+		}
+
+		for(map<string,Structure>::iterator it=TEXT.begin();it!=TEXT.end();it++){
+			string current = it->first;
+			if(TEXT[current].status==1)
+			{
+				//    cout << "1" << endl;
+				glm::mat4 MVP;  // MVP = Projection * View * Model
+
+				Matrices.model = glm::mat4(1.0f);
+
+
+				glm::mat4 ObjectTransform;
+				glm::mat4 translateObject = glm::translate (glm::vec3(TEXT[current].x+translation,TEXT[current].y+translation1  ,0.0f)); // glTranslatef
+				// glm::mat4 rotateTriangle = glm::rotate((float)((TEXT[current].curr_angle)*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
+				ObjectTransform=translateObject;
+				Matrices.model *= ObjectTransform;
+				MVP = VP * Matrices.model; // MVP = p * V * M
+
+				glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+				draw3DObject(TEXT[current].object);
+			}
+		}
+	}
+
+
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -1105,6 +1073,7 @@ void initialiseVariables()
         int i,j;
         int level=score_board.level;
         float cube_initial_posX=0,cube_initial_posY=0,cube_initial_posZ=0.0;
+        direction=0;
         for(i=1;i<=10;i++)
             for(j=1;j<=10;j++)
             {
@@ -1294,6 +1263,128 @@ void check_cube_fall()
     }
 }
 
+void rotate()
+{
+    float temp,translateInX,translateInY;
+    //rotate right
+    if(direction==1)
+    {
+        cube1.rotationX+=10;
+        //matrices
+       rotateCube = glm::rotate((float)(10*M_PI/180.0f), glm::vec3(0,1,0));
+       translateInX=cuboid_lengthX;
+       translateCubeEdge = glm::translate(glm::vec3(-1*(translateInX),0.0,cube1.height));
+       if(cube1.rotationX==90)
+        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+       else
+        translateCube1EdgeR = glm::translate(glm::vec3((translateInX),0.0,-1*cube1.height));
+       rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+
+       if (cube1.rotationX>=90)
+       {
+           cube1.rotationX=0;
+           direction=0;
+           cube1.x+=cuboid_lengthX;
+           //interchange cuboid z x lenghts
+          temp=cuboid_lengthZ;
+          cuboid_lengthZ=cuboid_lengthX;
+          cuboid_lengthX=temp;
+          check_cube_fall();
+       }
+    }
+    //rotate left
+    if(direction==2)
+    {
+        cube1.rotationX-=10;
+        //Matrices
+        rotateCube = glm::rotate((float)(-10*M_PI/180.0f), glm::vec3(0,1,0));
+        translateInX=cuboid_lengthZ;
+        translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.height));
+        if(cube1.rotationX==-90)
+            translateCube1EdgeR = glm::translate(glm::vec3(cuboid_lengthZ,0.0,-1*cube1.height));
+        else
+            translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+
+        if(cube1.rotationX<=-90)
+        {
+            cube1.rotationX=0;
+            direction=0;
+            //interchange cuboid z x lenghts
+           temp=cuboid_lengthZ;
+           cuboid_lengthZ=cuboid_lengthX;
+           cuboid_lengthX=temp;
+
+           //position cube1
+           cube1.x-=cuboid_lengthX;
+           //position cube2
+
+           //if(cube1.rotationX)
+           check_cube_fall();
+
+        }
+
+    }
+
+    //rotate up
+    if(direction==3)
+    {
+        cube1.rotationY-=10;
+        //matrices
+        rotateCube = glm::rotate((float)(-10*M_PI/180.0f), glm::vec3(1,0,0));
+        translateInY=cuboid_lengthY;
+        translateCubeEdge = glm::translate(glm::vec3(0.0,-1*(translateInY),cube1.height));
+        if(cube1.rotationY==-90)
+            translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        else
+            translateCube1EdgeR = glm::translate(glm::vec3(0.0,translateInY,-1*cube1.height));
+        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+
+        if (cube1.rotationY<=-90)
+        {
+            cube1.rotationY=0;
+            direction=0;
+            cube1.y+=cuboid_lengthY;
+
+            //interchange cuboid z x lenghts
+            temp=cuboid_lengthZ;
+            cuboid_lengthZ=cuboid_lengthY;
+            cuboid_lengthY=temp;
+            check_cube_fall();
+        }
+
+    }
+
+    //rotate Down
+    if(direction==4)
+    {
+        cube1.rotationY+=10;
+        //matrices
+        rotateCube = glm::rotate((float)(10*M_PI/180.0f), glm::vec3(1,0,0));
+        translateInY=cuboid_lengthZ;
+        translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.height));
+        if(cube1.rotationY==90)
+           translateCube1EdgeR = glm::translate(glm::vec3(0.0,translateInY,-1*cube1.height));
+        else
+            translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
+
+        if(cube1.rotationY>=90)
+        {
+            cube1.rotationY=0;
+            direction=0;
+            temp=cuboid_lengthZ;
+            cuboid_lengthZ=cuboid_lengthY;
+            cuboid_lengthY=temp;
+            //position cube1
+            cube1.y-=cuboid_lengthY;
+            check_cube_fall();
+
+        }
+
+    }
+}
+
 void update_level()
 {
     score_board.level+=1;
@@ -1334,6 +1425,7 @@ int main (int argc, char** argv)
 	if(camera_rotation_angle > 720)
 	    camera_rotation_angle -= 720;
 	last_update_time = current_time;
+    //rotate();
 	draw(window, 0, 0, 1.0, 1.0, 1, 1, 1);
 
         // Swap Frame Buffer in double buffering
