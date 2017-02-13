@@ -1,6 +1,6 @@
-#include <iostream>
-#include "tile_info.h"
-
+#include "header.h"
+#include"tile_info.h"
+using namespace std;
 tile_infoS tile_info[6];
 int tile_for_level[3][11][11];
 void initalise_tile_for_levels()
@@ -18,6 +18,8 @@ void initalise_tile_for_levels()
     tile_info[1].color_side[1]=0.0;
     tile_info[1].color_side[2]=1.0;
 
+    //2 is success square
+
     //fragile tile
     tile_info[3].color_base[0]=0.0;
     tile_info[3].color_base[1]=0.0;
@@ -30,6 +32,33 @@ void initalise_tile_for_levels()
     tile_info[3].color_side[0]=0.0;
     tile_info[3].color_side[1]=0.0;
     tile_info[3].color_side[2]=0.0;
+
+    //bridge button
+    tile_info[4].color_base[0]=0.0;
+    tile_info[4].color_base[1]=1.0;
+    tile_info[4].color_base[2]=0.0;
+
+    tile_info[4].color_top[0]=0.0;
+    tile_info[4].color_top[1]=1.0;
+    tile_info[4].color_top[2]=0.0;
+
+    tile_info[4].color_side[0]=0.0;
+    tile_info[4].color_side[1]=0.0;
+    tile_info[4].color_side[2]=0.0;
+
+    //bridge
+    tile_info[5].color_base[0]=0.0;
+    tile_info[5].color_base[1]=0.0;
+    tile_info[5].color_base[2]=1.0;
+
+    tile_info[5].color_top[0]=0.0;
+    tile_info[5].color_top[1]=0.0;
+    tile_info[5].color_top[2]=1.0;
+
+    tile_info[5].color_side[0]=0.0;
+    tile_info[5].color_side[1]=0.0;
+    tile_info[5].color_side[2]=0.0;
+
 
     //LEVEL 1
     tile_for_level[1][1][1]=1;
@@ -93,14 +122,14 @@ void initalise_tile_for_levels()
     tile_for_level[1][6][4]=0;
     tile_for_level[1][6][5]=0;
     tile_for_level[1][6][6]=1;
-    tile_for_level[1][6][7]=1;
+    tile_for_level[1][6][7]=4;
     tile_for_level[1][6][8]=1;
     tile_for_level[1][6][9]=0;
     tile_for_level[1][6][10]=0;
 
     tile_for_level[1][7][1]=1;
-    tile_for_level[1][7][2]=1;
-    tile_for_level[1][7][3]=1;
+    tile_for_level[1][7][2]=5;
+    tile_for_level[1][7][3]=5;
     tile_for_level[1][7][4]=0;
     tile_for_level[1][7][5]=0;
     tile_for_level[1][7][6]=1;

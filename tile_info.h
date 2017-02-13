@@ -6,7 +6,6 @@ typedef struct tile_infoS {
 }tile_infoS;
 extern tile_infoS tile_info[6];
 
-
 extern int tile_for_level[3][11][11];
 
 void initalise_tile_for_levels();

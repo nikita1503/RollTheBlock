@@ -1,20 +1,4 @@
-#include <iostream>
-#include <cmath>
-#include <fstream>
-#include <vector>
-
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GLFW/glfw3.h>
-
 #define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <map>
-
-
-#include <list>
 #include "tile_info.h"
 #include "header.h"
 
@@ -108,6 +92,7 @@ glm::mat4 translateCubeEdge;
 glm::mat4 translateCube1EdgeR;
 
 void check_cube_fall();
+bool bridge_button_pressed;
 
 /* Function to load Shaders - Use it as it is */
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -421,49 +406,27 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
     case 'q':
 	quit(window);
 	break;
-    case 'a':
-	rect_pos.x -= 0.1;
-	break;
-    case 'd':
-	rect_pos.x += 0.1;
-	break;
-    case 'w':
-	rect_pos.y += 0.1;
-	break;
-    case 's':
-	rect_pos.y -= 0.1;
-	break;
-    case 'r':
-	rect_pos.z -= 0.1;
-	break;
-    case 'f':
-	rect_pos.z += 0.1;
-	break;
-    case 'e':
-	rectangle_rotation += 1;
-	break;
     case 'j':
-	floor_pos.x -= 0.1;
-	break;
-    case 'l':
-	floor_pos.x += 0.1;
-	break;
-    case 'i':
-	floor_pos.y += 0.1;
-	break;
+    case 'J':
+    cube1.x-=tile_width;
+    check_cube_fall();
+    break;
     case 'k':
-	floor_pos.y -= 0.1;
-	break;
-    case 'y':
-	floor_pos.z -= 0.1;
-	break;
-    case 'h':
-	floor_pos.z += 0.1;
-	break;
-    case 'g':
-	floor_rel ^= 1;
-	break;
-    case ' ':
+    case 'K':
+    cube1.x+=tile_width;
+    check_cube_fall();
+    break;
+    case 'u':
+    case 'U':
+    cube1.y+=tile_width;
+    check_cube_fall();
+    break;
+    case 'i':
+    case 'I':
+    cube1.y-=tile_width;
+    check_cube_fall();
+    break;
+case ' ':
 	do_rot ^= 1;
 	break;
     case 't':
@@ -732,7 +695,7 @@ VAO* createTile (tile *curr_tile)
 	};
 
     float base[3],top[3],side[3];
-    printf("type-%d\n",type );
+    //printf("type-%d\n",type );
     base[0]=tile_info[type].color_base[0];
     base[1]=tile_info[type].color_base[1];
     base[2]=tile_info[type].color_base[2];
@@ -744,8 +707,8 @@ VAO* createTile (tile *curr_tile)
     side[0]=tile_info[type].color_side[0];
     side[1]=tile_info[type].color_side[1];
     side[2]=tile_info[type].color_side[2];
-    if(type==3)
-    printf("%f %f %f, %f %f %f, %f %f %f", base[0],base[1],base[2],top[1],top[1],top[2],side[0],side[1],side[2]);
+    //if(type==3)
+    //printf("%f %f %f, %f %f %f, %f %f %f", base[0],base[1],base[2],top[1],top[1],top[2],side[0],side[1],side[2]);
     GLfloat color_buffer_data [] = {
     //Top
     base[0],base[1],base[2],
@@ -1001,19 +964,20 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     list<tile>::iterator i;
     for(i=tiles_on_display.begin();i!=tiles_on_display.end();++i)
     {
-        //printf("h");
-    // Load identity to model matrix
-        Matrices.model = glm::mat4(1.0f);
+        if((i->type!=0 && i->type!=2 && i->type!=5)||(i->type==5 && bridge_button_pressed))
+        {
+        // Load identity to model matrix
+            Matrices.model = glm::mat4(1.0f);
 
-        glm::mat4 translateTile = glm::translate(glm::vec3(i->x,i->y,i->z));
-        //glm::mat4 rotateCam = glm::rotate((float)((90 - camera_rotation_angle)*M_PI/180.0f), glm::vec3(0,1,0));
-        Matrices.model *= (translateTile);
-        MVP = VP * Matrices.model;
-        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+            glm::mat4 translateTile = glm::translate(glm::vec3(i->x,i->y,i->z));
+            //glm::mat4 rotateCam = glm::rotate((float)((90 - camera_rotation_angle)*M_PI/180.0f), glm::vec3(0,1,0));
+            Matrices.model *= (translateTile);
+            MVP = VP * Matrices.model;
+            glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-        // draw3DObject draws the VAO given to it using current MVP matrix
-        if(i->type!=0 && i->type!=2)
+            // draw3DObject draws the VAO given to it using current MVP matrix
             draw3DObject((*i).object);
+        }
     }
 
     //cube1
@@ -1168,6 +1132,8 @@ void initialiseVariables()
                 }
             }
 
+    bridge_button_pressed=false;
+
     //cube1
         cube1.x=cube_initial_posX;
         cube1.y=cube_initial_posY;
@@ -1298,6 +1264,17 @@ void check_cube_fall()
             if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
             {
                 fall=true;
+                break;
+            }
+        }
+        //bridge button
+        if(i->type==4)
+        {
+            //block vertically on tile
+            if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
+            {
+                fall=false;
+                bridge_button_pressed^=true;
                 break;
             }
         }
