@@ -43,6 +43,16 @@ typedef struct Structure {
 
 map <string, Structure> TEXT;
 
+typedef struct star_t {
+	int key;
+	float X,Y;
+	VAO * star;
+}stars;
+
+int countstar=2;
+
+stars stararr[4];
+
 
 int proj_type;
 int do_rot, floor_rel;;
@@ -317,7 +327,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             break;
         case GLFW_KEY_DOWN:
             score_board.moves+=1;
-        direction=4;
+            direction=4;
             break;
 
         case GLFW_KEY_ESCAPE:
@@ -572,6 +582,30 @@ void createRectangle ()
 
     // create3DObject creates and returns a handle to a VAO that can be used later
     rectangle = create3DObject(GL_TRIANGLES, 13*3, vertex_buffer_data, color_buffer_data, GL_FILL);
+}
+
+VAO* createStar ()
+{
+	static const GLfloat vertex_buffer_data [] = {
+		0,-0.2,0, // vertex 1
+		-0.2,0.0,0, // vertex 2
+		0, 0.2,0, // vertex 3
+
+		0, 0.2,0, // vertex 3
+		0.2, 0.0,0, // vertex 4
+		0.,-0.2,0  // vertex 1
+	};
+
+	static const GLfloat color_buffer_data [] = {
+		255.0f/255.0f, 153.0f/255.0f, 0.0f/255.0f, // color 1
+		255.0f/255.0f, 153.0f/255.0f, 0.0f/255.0f, // color 2
+		255.0f/255.0f, 153.0f/255.0f, 0.0f/255.0f, // color 4
+
+		255.0f/255.0f, 153.0f/255.0f, 0.0f/255.0f, // color 1
+		255.0f/255.0f, 153.0f/255.0f, 0.0f/255.0f, // color 2
+		255.0f/255.0f, 153.0f/255.0f, 0.0f/255.0f
+	};
+	return create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
 VAO* createTile (tile *curr_tile)
@@ -1001,12 +1035,13 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
 		float translation1=3.7f;
 		if(k==1)
 		{
-			int temp=score_board.level%10;
+			int temp=score_board.level;
 			setStroke(temp+'0');
-			translation=-3.4f;
+			translation=-2.4f;
 		}
 
-		for(map<string,Structure>::iterator it=TEXT.begin();it!=TEXT.end();it++){
+		for(map<string,Structure>::iterator it=TEXT.begin();it!=TEXT.end();it++)
+        {
 			string current = it->first;
 			if(TEXT[current].status==1)
 			{
@@ -1029,6 +1064,22 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
 		}
 	}
 
+    //lifes
+    int j;
+    for(j=0;j<=2;j++)
+	{
+		Matrices.model = glm::mat4(1.0f);
+		glm::mat4 translateStar = glm::translate (glm::vec3(stararr[j].X, stararr[j].Y, 0));        // glTranslatef
+		//     glm::mat4 rotateMirror = glm::rotate((float)(mirarr[i].mirror_rotation*M_PI/180.0f), glm::vec3(0,0,1));
+		glm::mat4 StarTransform = translateStar ;
+		Matrices.model *= (StarTransform);
+		MVP = VP * Matrices.model;
+		glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        if(stararr[j].key==1)
+        printf("%d\n", stararr[j].key);
+		if(stararr[j].key==0)
+        {	draw3DObject(stararr[j].star);}
+	}
 
 }
 
@@ -1130,6 +1181,17 @@ void initialiseVariables()
         rotateCube=glm::mat4(1.0f);
         translateCubeEdge=glm::mat4(1.0f);
         translateCube1EdgeR=glm::mat4(1.0f);
+
+       //lifes
+        for(i=0;i<=2;i++)
+	{
+		stararr[i].star = createStar();
+	}
+    stararr[1].X =-3.7f ; stararr[1].Y=3.7f ; stararr[1].key = 0;
+    stararr[2].X =-3.3f ; stararr[2].Y=3.7f ; stararr[2].key = 0;
+    stararr[0].X =-2.9f ; stararr[0].Y=3.7f ; stararr[0].key = 0;
+
+
 
 }
 
@@ -1252,6 +1314,7 @@ void check_cube_fall()
     if(fall==true)
     {
         score_board.life-=1;
+        stararr[0].key=1;
         //start again
         if(score_board.life==0)
             terminate();
