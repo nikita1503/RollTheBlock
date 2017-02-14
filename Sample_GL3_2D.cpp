@@ -15,7 +15,7 @@ struct VAO {
     int NumVertices;
 };
 typedef struct VAO VAO;
-
+GLFWwindow* window;
 struct GLMatrices {
 //    glm::mat4 projection;
     glm::mat4 projectionO, projectionP;
@@ -79,7 +79,9 @@ typedef struct cubeS {
 cubeS cube1,cube2;
 float cuboid_lengthX,cuboid_lengthY,cuboid_lengthZ;
 int direction;
-
+float rotation,decrement,x,y;
+bool win;
+bool mouse_left_pressed, mouse_right_pressed;
 //extern int tile_for_level[3][11][11];
 
 
@@ -96,14 +98,21 @@ typedef struct boardS {
 }boardS;
 boardS board;
 
+typedef struct cameraI {
+    float Ex,Ey,Ez,Tx,Ty,Tz;
+}cameraI;
+cameraI camV;
+
 //rotation of cube1
 glm::mat4 rotationOverallCube;
 glm::mat4 rotateCube;
 glm::mat4 translateCubeEdge;
 glm::mat4 translateCube1EdgeR;
 
-void check_cube_fall();
+void check_cube_fall(bool);
 bool bridge_button_pressed;
+void mousescroll(GLFWwindow* window, double xoffset, double yoffset);
+
 
 /* Function to load Shaders - Use it as it is */
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -340,6 +349,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 }
 
 /* Executed for character input (like in text boxes) */
+int viewT;
 void keyboardChar (GLFWwindow* window, unsigned int key)
 {
     switch (key) {
@@ -349,25 +359,46 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
 	break;
     case 'j':
     case 'J':
-    cube1.x-=2*tile_width;
-    check_cube_fall();
+    direction=-1;
     break;
     case 'k':
     case 'K':
-    cube1.x+=2*tile_width;
-    check_cube_fall();
+    direction=-2;
     break;
     case 'u':
     case 'U':
-    cube1.y+=2*tile_width;
-    check_cube_fall();
+    direction=-3;
     break;
     case 'i':
     case 'I':
-    cube1.y-=2*tile_width;
-    check_cube_fall();
+    direction=-4;
     break;
-case ' ':
+    case 'b':
+    case 'B':
+    //block view
+    viewT=2;
+    break;
+    case 'n':
+    case 'N':
+    //normal view
+    viewT=1;
+    break;
+    case 'o':
+    case 'O':
+    //top down
+    viewT=3;
+    break;
+    case 'p':
+    case 'P':
+    //tower
+    viewT=4;
+    break;
+    case 'f':
+    case'F':
+    //follow cam
+    viewT=5;
+    break;
+    case ' ':
 	do_rot ^= 1;
 	break;
     case 't':
@@ -381,17 +412,54 @@ case ' ':
 /* Executed when a mouse button is pressed/released */
 void mouseButton (GLFWwindow* window, int button, int action, int mods)
 {
+    double mouse_pos_x, mouse_pos_y;
     switch (button) {
+    case GLFW_MOUSE_BUTTON_LEFT:
+	if (action == GLFW_PRESS) {
+        mouse_left_pressed=true;
+        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+        mouse_pos_x=(mouse_pos_x-120)*0.5/30-3.0f;
+        mouse_pos_y=(-1*mouse_pos_y+481)*0.5/30-3.0f;
+        int col=(mouse_pos_x+3.5f)/tile_width;
+        x = col*tile_width - 3.5f;
+        int row=(mouse_pos_y+3.5f)/tile_width;
+        y = row*tile_width - 3.5f;
+        direction=-5;
+        rotate();
+        //printf("%lf %f %d\n",mouse_pos_y,cube1.y+tile_width,col );
+        }
+    else
+    {
+        mouse_left_pressed=false;
+    }
+    break;
     case GLFW_MOUSE_BUTTON_RIGHT:
-	if (action == GLFW_RELEASE) {
-	    rectangle_rot_dir *= -1;
-	}
+    if(action == GLFW_PRESS)
+    {
+        mouse_right_pressed=true;
+        //helicopter view
+        viewT=6;
+    }
+    else
+        mouse_right_pressed=false;
+
+
 	break;
     default:
 	break;
     }
 }
 
+void mousescroll(GLFWwindow* window, double xoffset, double yoffset)
+{
+    //helicopter
+    viewT=6;
+    printf("%lf %lf\n",xoffset,yoffset );
+    if(xoffset==-1 || yoffset==-1)
+        camV.Ez-=0.1;
+    if(xoffset==1 || yoffset==1)
+        camV.Ez+=0.1;
+}
 
 /* Executed when window is resized to 'width' and 'height' */
 /* Modify the bounds of the screen here in glm::ortho or Field of View in glm::Perspective */
@@ -857,6 +925,81 @@ void createFloor ()
 }
 
 float camera_rotation_angle = 90;
+double mx,my;
+void getView()
+{
+    //normal view
+    if(viewT==1)
+    {
+        camV.Ex=5*cos(camera_rotation_angle*M_PI/180.0f);
+        camV.Ey=0;
+        camV.Ez=5*sin(camera_rotation_angle*M_PI/180.0f);
+        camV.Tx=0;
+        camV.Ty=0;
+        camV.Tz=0;
+    }
+    //block view
+    if(viewT==2)
+    {
+        camV.Ex=cube1.x+cuboid_lengthX;
+        camV.Ey=cube1.y+cuboid_lengthY;
+        camV.Ez=(cube1.z+cuboid_lengthZ);
+        camV.Tx=0;
+        camV.Ty=0;
+        camV.Tz=0;
+
+    }
+    //top down
+    if(viewT==3)
+    {
+        camV.Ex=0;
+        camV.Ey=0;
+        camV.Ez=5;
+        camV.Tx=0;
+        camV.Ty=0;
+        camV.Tz=0;
+
+    }
+    //tower
+    if(viewT==4)
+    {
+        camV.Ex=board.x;
+        camV.Ey=board.y;
+        camV.Ez=5;
+        camV.Tx=0;
+        camV.Ty=0;
+        camV.Tz=0;
+
+    }
+    //follow cam
+    if(viewT==5)
+    {
+        camV.Ex=cube1.x;
+        camV.Ey=cube1.y;
+        camV.Ez=3;
+        camV.Tx=0;
+        camV.Ty=0;
+        camV.Tz=0;
+
+    }
+    //helicopter
+    if(viewT==6)
+    {
+        if(mouse_right_pressed)
+        {
+            glfwGetCursorPos(window, &mx, &my);
+            mx=(mx-120)*0.5/30-3.0f;
+            my=(-1*my+481)*0.5/30-3.0f;
+        }
+        camV.Ex=mx;
+        camV.Ey=my;
+        //camV.Ez=3;
+        camV.Tx=0;
+        camV.Ty=0;
+        camV.Tz=0;
+
+    }
+}
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
@@ -871,11 +1014,13 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     // Don't change unless you know what you are doing
     glUseProgram(programID);
 
+    getView();
+
     // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
+    glm::vec3 eye (camV.Ex,camV.Ey,camV.Ez);
     //glm::vec3 eye(1,2,2);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target (0, 0, 0);
+    glm::vec3 target (camV.Tx,camV.Ty,camV.Tz);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
     glm::vec3 up (0, 1, 0);
 
@@ -1075,9 +1220,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
 		Matrices.model *= (StarTransform);
 		MVP = VP * Matrices.model;
 		glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-        if(stararr[j].key==1)
-        printf("%d\n", stararr[j].key);
-		if(stararr[j].key==0)
+        if(stararr[j].key==0)
         {	draw3DObject(stararr[j].star);}
 	}
 
@@ -1114,24 +1257,25 @@ GLFWwindow* initGLFW (int width, int height){
     glfwSetKeyCallback(window, keyboard);      // general keyboard input
     glfwSetCharCallback(window, keyboardChar);  // simpler specific character handling
     glfwSetMouseButtonCallback(window, mouseButton);  // mouse button clicks
-
+    glfwSetScrollCallback(window, mousescroll);
     return window;
 }
 
-void initialiseVariables()
+void initialiseVariables(bool updateL)
 {
     //initialise and create tiles
         int i,j;
         int level=score_board.level;
         float cube_initial_posX=0,cube_initial_posY=0,cube_initial_posZ=0.0;
+        win=false;
         direction=0;
+        //camera
+        viewT=1;
         for(i=1;i<=10;i++)
             for(j=1;j<=10;j++)
             {
-                //printf("%d",tile_for_level[level][i][j] );
                 if(tile_for_level[level][i][j])
                 {
-                    //printf("f\n");
                     int tile_num=tile_for_level[level][i][j];
                     tile* new_tile=new tile;
                     new_tile->x=board.x+(new_tile->width)*(i-1);
@@ -1182,15 +1326,10 @@ void initialiseVariables()
         translateCubeEdge=glm::mat4(1.0f);
         translateCube1EdgeR=glm::mat4(1.0f);
 
-       //lifes
-        for(i=0;i<=2;i++)
-	{
-		stararr[i].star = createStar();
-	}
-    stararr[1].X =-3.7f ; stararr[1].Y=3.7f ; stararr[1].key = 0;
-    stararr[2].X =-3.3f ; stararr[2].Y=3.7f ; stararr[2].key = 0;
-    stararr[0].X =-2.9f ; stararr[0].Y=3.7f ; stararr[0].key = 0;
-
+        if(updateL)
+            countstar=2;
+        for(i=0;i<=countstar;i++)
+            stararr[i].key=0;
 
 
 }
@@ -1212,7 +1351,8 @@ void initGL (GLFWwindow* window, int width, int height)
     score_board.life=3;
     score_board.moves=0;
 
-    initialiseVariables();
+    decrement=0.0f;
+    initialiseVariables(true);
     COLOR black = {0/255.0,0/255.0,0/255.0};
     float height1 = 0.02f;
 	float width1 = 0.2f;
@@ -1223,6 +1363,17 @@ void initGL (GLFWwindow* window, int width, int height)
 	createRectangleScore("left2",0,black,black,black,black,-0.1,-0.1,width1,height1,"score");
 	createRectangleScore("right1",0,black,black,black,black,0.1,0.1,width1,height1,"score");
 	createRectangleScore("right2",0,black,black,black,black,0.1,-0.1,width1,height1,"score");
+
+
+    //lifes
+    int i;
+     for(i=0;i<=2;i++)
+     {
+         stararr[i].star = createStar();
+     }
+     stararr[1].X =-3.7f ; stararr[1].Y=3.7f ; stararr[1].key = 0;
+     stararr[2].X =-3.3f ; stararr[2].Y=3.7f ; stararr[2].key = 0;
+     stararr[0].X =-2.9f ; stararr[0].Y=3.7f ; stararr[0].key = 0;
 
 
     // Create and compile our GLSL program from the shaders
@@ -1246,89 +1397,109 @@ void initGL (GLFWwindow* window, int width, int height)
     // cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 }
 
-void check_cube_fall()
+void check_cube_fall(bool fallen)
 {
     list<tile>::iterator i = tiles_on_display.begin();
     bool fall=true;
-    for(;i!=tiles_on_display.end();++i)
+    if(!fallen)
     {
-        //block in square hole
-        if((i->type)==2)
+        for(;i!=tiles_on_display.end();++i)
         {
-            if( cube1.x == i->x && cube1.y == i->y /*&& cuboid_lengthX == tile_width && cuboid_lengthY == tile_width*/ )
+            //block in square hole
+            if((i->type)==2)
             {
-                return update_level();
-            }
-        }
-        //normal tile
-        if(i->type==1)
-        {
-            if( cube1.x == i->x && cube1.y == i->y )
-            {
-                //cube on a tile
-                fall=false;
-                break;
-            }
-            else if( cuboid_lengthX > tile_width )
-            {
-                if( cube1.x + tile_width == i->x && cube1.y == i->y )
+                if( cube1.x == i->x && cube1.y == i->y && cuboid_lengthX == tile_width && cuboid_lengthY == tile_width )
                 {
-                    //cube in tile
+                    direction=5;
+                    win=true;
+                }
+            }
+            //normal tile
+            if(i->type==1 || (i->type==5 && bridge_button_pressed))
+            {
+                if( cube1.x == i->x && cube1.y == i->y )
+                {
+                    //cube on a tile
+                    fall=false;
+                    break;
+                }
+                else if( cuboid_lengthX > tile_width )
+                {
+                    if( cube1.x + tile_width == i->x && cube1.y == i->y )
+                    {
+                        //cube in tile
+                        fall=false;
+                        break;
+                    }
+                }
+                else if( cuboid_lengthY > tile_width )
+                {
+                    if( cube1.y + tile_width == i->y && cube1.x == i->x )
+                    {
+                        //cube in tile
+                        fall=false;
+                        break;
+                    }
+                }
+            }
+            //fragie tile
+            if(i->type==3)
+            {
+                //block vertically on tile
+                if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
+                {
+                    fall=true;
+                    i->type=0;
+                    break;
+                }
+                else if((cube1.x==i->x && cube1.y==i->y) || (cube1.x+(cuboid_lengthX-tile_width))==i->x && (cube1.y+(cuboid_lengthY-tile_width))==i->y)
+                {
                     fall=false;
                     break;
                 }
             }
-            else if( cuboid_lengthY > tile_width )
+            //bridge button
+            if(i->type==4)
             {
-                if( cube1.y + tile_width == i->y && cube1.x == i->x )
+                //block vertically on tile
+                if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
                 {
-                    //cube in tile
+                    fall=false;
+                    bridge_button_pressed^=true;
+                    break;
+                }
+                else if((cube1.x==i->x && cube1.y==i->y) || (cube1.x+(cuboid_lengthX-tile_width))==i->x && (cube1.y+(cuboid_lengthY-tile_width))==i->y)
+                {
                     fall=false;
                     break;
                 }
-            }
-        }
-        //fragie tile
-        if(i->type==3)
-        {
-            //block vertically on tile
-            if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
-            {
-                fall=true;
-                break;
-            }
-        }
-        //bridge button
-        if(i->type==4)
-        {
-            //block vertically on tile
-            if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
-            {
-                fall=false;
-                bridge_button_pressed^=true;
-                break;
-            }
-        }
-    }
 
-    if(fall==true)
+            }
+        }
+        if(fall)
+            direction=5;
+
+    }
+    if(fallen)
     {
+        //direction=5;
         score_board.life-=1;
-        stararr[0].key=1;
+        stararr[countstar].key=1;
+        countstar--;
         //start again
         if(score_board.life==0)
             terminate();
         else
         {
             //start again
-            initialiseVariables();
+            initialiseVariables(false);
         }
     }
 }
 
 void rotate()
 {
-    float temp,translateInX,translateInY;
+    float temp,translateInX,translateInY,d=0.0625;
     //rotate right
     if(direction==1)
     {
@@ -1352,7 +1523,7 @@ void rotate()
           temp=cuboid_lengthZ;
           cuboid_lengthZ=cuboid_lengthX;
           cuboid_lengthX=temp;
-          check_cube_fall();
+          check_cube_fall(false);
        }
     }
     //rotate left
@@ -1383,7 +1554,7 @@ void rotate()
            //position cube2
 
            //if(cube1.rotationX)
-           check_cube_fall();
+           check_cube_fall(false);
 
         }
 
@@ -1413,7 +1584,7 @@ void rotate()
             temp=cuboid_lengthZ;
             cuboid_lengthZ=cuboid_lengthY;
             cuboid_lengthY=temp;
-            check_cube_fall();
+            check_cube_fall(false);
         }
 
     }
@@ -1441,22 +1612,105 @@ void rotate()
             cuboid_lengthY=temp;
             //position cube1
             cube1.y-=cuboid_lengthY;
-            check_cube_fall();
+            check_cube_fall(false);
 
         }
 
     }
+
+    //fall Down
+    if(direction==5)
+    {
+        //matrices
+        cube1.z-=0.05;
+        if(cube1.z<-5)
+            if(win)
+                update_level();
+            else
+                check_cube_fall(true);
+    }
+    //jump left
+    if(direction==-1)
+    {
+        decrement+=d;
+        cube1.x-=d;
+        if(decrement==2*tile_width)
+        {
+            direction=0;
+            decrement=0;
+            check_cube_fall(false);
+        }
+    }
+    //jump right
+    if(direction==-2)
+    {
+        decrement+=d;
+        printf("%f %f %f\n",d,decrement, 2*tile_width );
+        cube1.x+=d;
+        if(decrement==2*tile_width)
+        {
+            printf("hoja\n");
+            direction=0;
+            decrement=0;
+            check_cube_fall(false);
+        }
+    }
+    //jump up
+    if(direction==-3)
+    {
+        decrement+=d;
+        cube1.y+=d;
+        if(decrement==2*tile_width)
+        {
+            direction=0;
+            decrement=0;
+            check_cube_fall(false);
+        }
+    }
+    //jump down
+    if(direction==-4)
+    {
+        decrement+=d;
+        cube1.y-=d;
+        if(decrement==2*tile_width)
+        {
+            direction=0;
+            decrement=0;
+            check_cube_fall(false);
+        }
+    }
+    //move with cursor
+    if(direction==-5)
+    {
+        if(cube1.x<x)
+            cube1.x+=d;
+        else
+            cube1.x-=d;
+
+        if(cube1.y<y)
+            cube1.y+=d;
+        else
+            cube1.y-=d;
+
+        if(cube1.x==x && cube1.y==y)
+        {
+            direction=0;
+            check_cube_fall(false);
+        }
+    }
+
+
+
 }
 
-void update_level()
+    void update_level()
 {
     score_board.level+=1;
 
-    printf("high\n");
     if(score_board.level>2)
         //win
         terminate();
-    initialiseVariables();
+    initialiseVariables(true);
 }
 
 int main (int argc, char** argv)
@@ -1469,7 +1723,7 @@ int main (int argc, char** argv)
     do_rot = 0;
     floor_rel = 1;
 
-    GLFWwindow* window = initGLFW(width, height);
+    window = initGLFW(width, height);
     initalise_tile_for_levels();
     initGLEW();
     initGL (window, width, height);
