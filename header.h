@@ -12,14 +12,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <map>
 
-#include <thread>
-#include <ao/ao.h>
-#include <mpg123.h>
-#include <time.h>
-
 
 #include <list>
 
 void update_level();
 void rotate();
-void* play_audio(string audioFile);
