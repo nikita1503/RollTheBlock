@@ -1,9 +1,64 @@
 #define GLM_FORCE_RADIANS
 #include "tile_info.h"
 #include "header.h"
-
+#include <ao/ao.h>
+#include <mpg123.h>
+#define BITS 8;
 using namespace std;
 
+mpg123_handle *mh;
+unsigned char *buffer;
+size_t buffer_size;
+size_t done;
+int err;
+
+int driver;
+ao_device *dev;
+
+ao_sample_format format;
+int channels, encoding;
+long rate;
+
+
+void audio_init() {
+    /* initializations */
+    ao_initialize();
+    driver = ao_default_driver_id();
+    mpg123_init();
+    mh = mpg123_new(NULL, &err);
+    buffer_size= 3000;
+    buffer = (unsigned char*) malloc(buffer_size * sizeof(unsigned char));
+
+    /* open the file and get the decoding format */
+    mpg123_open(mh, "./207-miracle-moon.mp3");
+    mpg123_getformat(mh, &rate, &channels, &encoding);
+
+    /* set the output format and open the output device */
+    format.bits = mpg123_encsize(encoding) * BITS;
+    format.rate = rate;
+    format.channels = channels;
+    format.byte_format = AO_FMT_NATIVE;
+    format.matrix = 0;
+    dev = ao_open_live(driver, &format, NULL);
+}
+
+
+void audio_play() {
+    /* decode and play */
+    if (mpg123_read(mh, buffer, buffer_size, &done) == MPG123_OK)
+        ao_play(dev, (char*) buffer, done);
+    else mpg123_seek(mh, 0, SEEK_SET);
+}
+
+void audio_close() {
+    /* clean up */
+    free(buffer);
+    ao_close(dev);
+    mpg123_close(mh);
+    mpg123_delete(mh);
+    mpg123_exit();
+    ao_shutdown();
+}
 
 struct VAO {
     GLuint VertexArrayID;
@@ -403,6 +458,7 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
 	do_rot ^= 1;
 	break;
     case 't':
+    case 'T':
 	proj_type ^= 1;
 	break;
     default:
@@ -455,7 +511,6 @@ void mousescroll(GLFWwindow* window, double xoffset, double yoffset)
 {
     //helicopter
     viewT=6;
-    printf("%lf %lf\n",xoffset,yoffset );
     if(xoffset==-1 || yoffset==-1)
         camV.Ez-=0.1;
     if(xoffset==1 || yoffset==1)
@@ -1439,7 +1494,7 @@ void check_cube_fall(bool fallen)
     {
         for(;i!=tiles_on_display.end();++i)
         {
-            //block in square hole
+        //block in square hole
             if((i->type)==2)
             {
                 if( Cx == i->x && Cy == i->y && cuboid_lengthX == tile_width && cuboid_lengthY == tile_width )
@@ -1679,11 +1734,9 @@ void rotate()
     if(direction==-2)
     {
         decrement+=d;
-        printf("%f %f %f\n",d,decrement, 2*tile_width );
         cube1.x+=d;
         if(decrement==2*tile_width)
         {
-            printf("hoja\n");
             direction=0;
             decrement=0;
             check_cube_fall(false);
@@ -1764,6 +1817,7 @@ int main (int argc, char** argv)
 
     last_update_time = glfwGetTime();
     /* Draw in loop */
+    audio_init();
     while (!glfwWindowShouldClose(window)) {
 
 	// clear the color and depth in the frame buffer
@@ -1776,6 +1830,7 @@ int main (int argc, char** argv)
 	if(camera_rotation_angle > 720)
 	    camera_rotation_angle -= 720;
 	last_update_time = current_time;
+    audio_play();
     //rotate();
 	draw(window, 0, 0, 1.0, 1.0, 1, 1, 1);
 
