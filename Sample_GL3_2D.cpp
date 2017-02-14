@@ -1429,6 +1429,11 @@ void initGL (GLFWwindow* window, int width, int height)
 void check_cube_fall(bool fallen)
 {
     list<tile>::iterator i = tiles_on_display.begin();
+    int col=(cube1.x+3.5f)/tile_width;
+    float Cx = col*tile_width - 3.5f;
+    int row=(cube1.y+3.5f)/tile_width;
+    float Cy = row*tile_width - 3.5f;
+
     bool fall=true;
     if(!fallen)
     {
@@ -1437,7 +1442,7 @@ void check_cube_fall(bool fallen)
             //block in square hole
             if((i->type)==2)
             {
-                if( cube1.x == i->x && cube1.y == i->y && cuboid_lengthX == tile_width && cuboid_lengthY == tile_width )
+                if( Cx == i->x && Cy == i->y && cuboid_lengthX == tile_width && cuboid_lengthY == tile_width )
                 {
                     direction=5;
                     win=true;
@@ -1446,7 +1451,7 @@ void check_cube_fall(bool fallen)
             //normal tile
             if(i->type==1 || (i->type==5 && bridge_button_pressed))
             {
-                if( cube1.x == i->x && cube1.y == i->y )
+                if( Cx == i->x && Cy == i->y )
                 {
                     //cube on a tile
                     fall=false;
@@ -1454,7 +1459,7 @@ void check_cube_fall(bool fallen)
                 }
                 else if( cuboid_lengthX > tile_width )
                 {
-                    if( cube1.x + tile_width == i->x && cube1.y == i->y )
+                    if( Cx + tile_width == i->x && Cy == i->y )
                     {
                         //cube in tile
                         fall=false;
@@ -1463,7 +1468,7 @@ void check_cube_fall(bool fallen)
                 }
                 else if( cuboid_lengthY > tile_width )
                 {
-                    if( cube1.y + tile_width == i->y && cube1.x == i->x )
+                    if( Cy + tile_width == i->y && Cx == i->x )
                     {
                         //cube in tile
                         fall=false;
@@ -1475,13 +1480,13 @@ void check_cube_fall(bool fallen)
             if(i->type==3)
             {
                 //block vertically on tile
-                if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
+                if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && Cx==i->x && Cy==i->y)
                 {
                     fall=true;
                     i->type=0;
                     break;
                 }
-                else if((cube1.x==i->x && cube1.y==i->y) || (cube1.x+(cuboid_lengthX-tile_width))==i->x && (cube1.y+(cuboid_lengthY-tile_width))==i->y)
+                else if((Cx==i->x && Cy==i->y) || (Cx+(cuboid_lengthX-tile_width))==i->x && (Cy+(cuboid_lengthY-tile_width))==i->y)
                 {
                     fall=false;
                     break;
@@ -1491,13 +1496,13 @@ void check_cube_fall(bool fallen)
             if(i->type==4)
             {
                 //block vertically on tile
-                if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && cube1.x==i->x && cube1.y==i->y)
+                if(cuboid_lengthY==tile_width && cuboid_lengthX==tile_width && Cx==i->x && Cy==i->y)
                 {
                     fall=false;
                     bridge_button_pressed^=true;
                     break;
                 }
-                else if((cube1.x==i->x && cube1.y==i->y) || (cube1.x+(cuboid_lengthX-tile_width))==i->x && (cube1.y+(cuboid_lengthY-tile_width))==i->y)
+                else if((Cx==i->x && Cy==i->y) || (Cx+(cuboid_lengthX-tile_width))==i->x && (Cy+(cuboid_lengthY-tile_width))==i->y)
                 {
                     fall=false;
                     break;
@@ -1724,8 +1729,8 @@ void rotate()
         if(cube1.x==x && cube1.y==y)
         {
             direction=0;
-            check_cube_fall(false);
         }
+        check_cube_fall(false);
     }
 
 
