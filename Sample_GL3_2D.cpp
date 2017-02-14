@@ -1713,6 +1713,55 @@ void rotate()
     initialiseVariables(true);
 }
 
+void* play_audio(string audioFile){
+	mpg123_handle *mh;
+	unsigned char *buffer;
+	size_t buffer_size;
+	size_t done;
+	int err;
+
+	int driver;
+	ao_device *dev;
+
+	ao_sample_format format;
+	int channels, encoding;
+	long rate;
+
+	/* initializations */
+	ao_initialize();
+	driver = ao_default_driver_id();
+	mpg123_init();
+	mh = mpg123_new(NULL, &err);
+	buffer_size = mpg123_outblock(mh);
+	buffer = (unsigned char*) malloc(buffer_size * sizeof(unsigned char));
+
+	/* open the file and get the decoding format */
+	mpg123_open(mh, &audioFile[0]);
+	mpg123_getformat(mh, &rate, &channels, &encoding);
+
+	/* set the output format and open the output device */
+	format.bits = mpg123_encsize(encoding) * 8;
+	format.rate = rate;
+	format.channels = channels;
+	format.byte_format = AO_FMT_NATIVE;
+	format.matrix = 0;
+	dev = ao_open_live(driver, &format, NULL);
+
+	/* decode and play */
+	char *p =(char *)buffer;
+	while (mpg123_read(mh, buffer, buffer_size, &done) == MPG123_OK)
+		ao_play(dev, p, done);
+
+	/* clean up */
+	free(buffer);
+	ao_close(dev);
+	mpg123_close(mh);
+	mpg123_delete(mh);
+}
+
+time_t old_time;
+
+
 int main (int argc, char** argv)
 {
     int width = 600;
@@ -1729,11 +1778,21 @@ int main (int argc, char** argv)
     initGL (window, width, height);
 
     last_update_time = glfwGetTime();
+    srand(time(NULL));
+
+    old_time = time(NULL);
+    thread(play_audio,"Sounds/background.mp3").detach();
+
     /* Draw in loop */
     while (!glfwWindowShouldClose(window)) {
 
 	// clear the color and depth in the frame buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if(time(NULL)-old_time>=93){
+    			old_time=time(NULL);
+    			thread(play_audio,"Sounds/background.mp3").detach();
+    }
 
         // OpenGL Draw commands
 	current_time = glfwGetTime();
