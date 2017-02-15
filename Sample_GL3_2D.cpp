@@ -68,32 +68,32 @@ double last_update_time, current_time;
 glm::vec3 rect_pos, floor_pos;
 float rectangle_rotation = 0;
 
-float tile_width=0.5,tile_height=0.25; //if change here, change in struct tile
-typedef struct tile {
+float TileWidth=0.5,TileHeight=0.25; //if change here, change in struct tile
+typedef struct tileS {
+    int style;
     float x,y,z;
-    static const float width=0.5,height=0.25;
-    int type;
+    static const float w=0.5,h=0.25;
     VAO* object;
-}tile;
-list<tile> tiles_on_display;
+}tileS;
+list<tileS> TileShow;
 
 typedef struct cubeS {
     float x,y,z;
-    float width,height;
-    float rotationX,rotationY;
+    float w,h;
+    float rX,rY;
     VAO* object;
 }cubeS;
 cubeS cube1,cube2;
 float cuboid_lengthX,cuboid_lengthY,cuboid_lengthZ;
 
-//extern int tile_for_level[3][11][11];
+//extern int TileArrange[3][11][11];
 
 
-typedef struct score_boardS {
+typedef struct ScoreBoardS {
     int score,level,life,moves;
     float time;
-}score_boardS;
-score_boardS score_board;
+}ScoreBoardS;
+ScoreBoardS ScoreBoard;
 
 typedef struct boardS {
     static const float x=-3.5;
@@ -300,7 +300,8 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     // Function is called first on GLFW_PRESS.
 
-    float translateInX, translateInY, temp;
+    //float translateInX, translateInY, temp;
+    float temp;
 
     if (action == GLFW_RELEASE) {
         switch (key) {
@@ -319,17 +320,17 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
     else if (action == GLFW_PRESS) {
         switch (key) {
     case GLFW_KEY_RIGHT:
-        score_board.moves+=1;
-        cube1.rotationX+=90;
-        if (cube1.rotationX>360)
-            cube1.rotationX=90;
+        ScoreBoard.moves+=1;
+        cube1.rX+=90;
+        if (cube1.rX>360)
+            cube1.rX=90;
         cube1.x+=cuboid_lengthX;
 
         //matrices
         rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(0,1,0));
-        translateInX=cuboid_lengthX;
-        translateCubeEdge = glm::translate(glm::vec3(-1*(translateInX),0.0,cube1.height));
-        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+        //translateInX=cuboid_lengthX;
+        translateCubeEdge = glm::translate(glm::vec3(-1*(cuboid_lengthX),0.0,cube1.h));
+        translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.h));
         rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
 
         //interchange cuboid z x lenghts
@@ -340,16 +341,16 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 
         break;
         case GLFW_KEY_LEFT:
-            score_board.moves+=1;
-            cube1.rotationX-=90;
-            if (cube1.rotationX<-360)
-                cube1.rotationX=-90;
+            ScoreBoard.moves+=1;
+            cube1.rX-=90;
+            if (cube1.rX<-360)
+                cube1.rX=-90;
 
             //Matrices
             rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(0,1,0));
-            translateInX=cuboid_lengthZ;
-            translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.height));
-            translateCube1EdgeR = glm::translate(glm::vec3(cuboid_lengthZ,0.0,-1*cube1.height));
+            //translateInX=cuboid_lengthZ;
+            translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.h));
+            translateCube1EdgeR = glm::translate(glm::vec3(cuboid_lengthZ,0.0,-1*cube1.h));
             rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
 
 
@@ -366,16 +367,16 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             check_cube_fall();
             break;
         case GLFW_KEY_UP:
-            score_board.moves+=1;
-            cube1.rotationY-=90;
-            if (cube1.rotationY<-360)
-                cube1.rotationY=-90;
+            ScoreBoard.moves+=1;
+            cube1.rY-=90;
+            if (cube1.rY<-360)
+                cube1.rY=-90;
             cube1.y+=cuboid_lengthY;
 
             rotateCube = glm::rotate((float)(-90*M_PI/180.0f), glm::vec3(1,0,0));
-            translateInY=cuboid_lengthY;
-            translateCubeEdge = glm::translate(glm::vec3(0.0,-1*(translateInY),cube1.height));
-            translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.height));
+            //translateInY=cuboid_lengthY;
+            translateCubeEdge = glm::translate(glm::vec3(0.0,-1*(cuboid_lengthY),cube1.h));
+            translateCube1EdgeR = glm::translate(glm::vec3(0.0,0.0,-1*cube1.h));
             rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
 
             //interchange cuboid z x lenghts
@@ -385,16 +386,16 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             check_cube_fall();
             break;
         case GLFW_KEY_DOWN:
-            score_board.moves+=1;
-            cube1.rotationY+=90;
-            if (cube1.rotationY>360)
-                cube1.rotationY=90;
+            ScoreBoard.moves+=1;
+            cube1.rY+=90;
+            if (cube1.rY>360)
+                cube1.rY=90;
 
             //matrices
             rotateCube = glm::rotate((float)(90*M_PI/180.0f), glm::vec3(1,0,0));
-            translateInY=cuboid_lengthZ;
-            translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.height));
-            translateCube1EdgeR = glm::translate(glm::vec3(0.0,translateInY,-1*cube1.height));
+            //translateInY=cuboid_lengthZ;
+            translateCubeEdge = glm::translate(glm::vec3(0.0,0.0,cube1.h));
+            translateCube1EdgeR = glm::translate(glm::vec3(0.0,cuboid_lengthZ,-1*cube1.h));
             rotationOverallCube = translateCube1EdgeR * rotateCube * translateCubeEdge * rotationOverallCube;
             //interchange cuboid z x lenghts
             temp=cuboid_lengthZ;
@@ -681,110 +682,110 @@ void createRectangle ()
     rectangle = create3DObject(GL_TRIANGLES, 13*3, vertex_buffer_data, color_buffer_data, GL_FILL);
 }
 
-struct object  createTile(string name,float x_pos,float y_pos,float z_pos,float l, float b, float h,COLOR L,COLOR R,COLOR T,string component,GLenum fill_mode=GL_FILL,int typeofstage=0){
+/*struct object  createTile(string name,float x_pos,float y_pos,float z_pos,float l, float b, float h,COLOR L,COLOR R,COLOR T,string component,GLenum fill_mode=GL_FILL,int typeofstage=0){
     GLfloat a[]={
 
             /* Rectangle 1 */
 
-            -l, -b, -h,
+    /*        -l, -b, -h,
             -l, -b, h,
             l, -b, h,
             l, -b, h,
             l, -b, -h,
             -l, -b, -h,
-
+*/
             /* Rectangle 2 */
 
-            l, b, -h,
+    /*        l, b, -h,
             l, b, h,
             l, -b, h,
             l, -b, h,
             l, -b, -h,
-            l, b, -h,
+            l, b, -h,*/
 
             /* Rectangle 3 */
 
-            -l, b, -h,
+    /*        -l, b, -h,
             -l, b, h,
             l, b, h,
             l, b, h,
             l, b, -h,
-            -l, b, -h,
+            -l, b, -h,*/
 
             /* Rectangle 4 */
 
-            -l, b, -h,
+    /*        -l, b, -h,
             -l, b, h,
             -l, -b, h,
             -l, -b, h,
             -l, -b, -h,
-            -l, b, -h,
+            -l, b, -h,*/
 
             /* Rectangle 5 */
 
-            -l, -b, -h,
+    /*        -l, -b, -h,
             -l, b, -h,
             l, b, -h,
             l, b, -h,
             l, -b, -h,
-            -l, -b, -h,
+            -l, -b, -h,*/
 
             /* Rectangle 6 */
-            -l, -b, h,
+    /*        -l, -b, h,
             -l, b, h,
             l, b, h,
             l, b, h,
             l, -b, h,
-            -l, -b, h,
+            -l, -b, h,*/
 
-    };
-    GLfloat C[]={
+/*    };
+    GLfloat C[]={*/
             /* Rectangle 1 (Bottom)*/
+    /*        T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
+            T.r, T.g, T.b,*/
 
             /* Rectangle 2 (left)*/
+        /*    L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
-            L.r, L.g, L.b,
-            L.r, L.g, L.b,
+            L.r, L.g, L.b,*/
 
 
 
             /* Rectangle 3  (Top layer)*/
 
+/*            T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
-            T.r, T.g, T.b,
-            T.r, T.g, T.b,
+            T.r, T.g, T.b,*/
 
             /* Rectangle 4 */
+/*            L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
-            L.r, L.g, L.b,
-
+*/
             /* Rectangle 5 (right)*/
 
+/*            R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
-            R.r, R.g, R.b,
-
+*/
             /* Rectangle 6 */
-            R.r, R.g, R.b,
+/*            R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
@@ -796,53 +797,53 @@ struct object  createTile(string name,float x_pos,float y_pos,float z_pos,float 
     T=black;
     R=black;
     L=black;
-    GLfloat C2[]={
+    GLfloat C2[]={ */
             /* Rectangle 1 (Bottom)*/
+/*            T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
-            T.r, T.g, T.b,
-
+*/
             /* Rectangle 2 (left)*/
+/*            L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
-            L.r, L.g, L.b,
-
+*/
 
 
             /* Rectangle 3  (Top layer)*/
 
+/*            T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
             T.r, T.g, T.b,
-            T.r, T.g, T.b,
-
+*/
             /* Rectangle 4 */
+/*            L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
             L.r, L.g, L.b,
-            L.r, L.g, L.b,
-
+*/
             /* Rectangle 5 (right)*/
 
+/*            R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
-            R.r, R.g, R.b,
-
+*/
             /* Rectangle 6 */
-            R.r, R.g, R.b,
+/*            R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
             R.r, R.g, R.b,
@@ -874,19 +875,109 @@ struct object  createTile(string name,float x_pos,float y_pos,float z_pos,float 
     vishsprite.typeofstage=typeofstage;
     vishsprite.status=1;
     vishsprite.angle=0;
-    /*if(component=="cube")
+*/    /*if(component=="cube")
         cube[name]=vishsprite;
     if(component=="stage"){
         stage[name]=vishsprite;
     }*/
-    return vishsprite;
+/*    return vishsprite;
 
 }
+*/
 
+VAO* createTile (tileS *curr_tile)
+{
+    float x=curr_tile->x,y=curr_tile->y,z=curr_tile->z;
+    float w=curr_tile->w,h=curr_tile->h;
+    // GL3 accepts only Triangles. Quads are not supported
+    static const GLfloat vertex_buffer_data [] = {
+	0.0, w, 0.0, //1
+	0.0, 0.0, 0.0, //2
+	w, 0.0, 0.0,  //3
+    0.0, w, 0.0, //1
+    w, 0.0, 0.0,  //3
+    w, w, 0.0,  //4
+    w, w, 0.0,  //4
+    w, 0.0, 0.0,  //3
+    w, 0.0, -1*h,  //5
+    w, w, 0.0,  //4
+    w, 0.0, -1*h,  //5
+    w, w, -1.0*h,  //6
+    w, w, -1.0*h,  //6
+    w, 0.0, -1*h,  //5
+    0.0, 0.0, -1*h,  //7
+    w, w, -1.0*h,  //6
+    0.0, 0.0, -1*h,  //7
+	0.0, w, -1*h,  //8
+    0.0, w, -1*h,  //8
+    0.0, 0.0, -1*h,  //7
+    0.0, 0.0, 0.0, //2
+    0.0, w, -1*h,  //8
+    0.0, 0.0, 0.0, //2
+    0.0, w, 0.0, //1
+    0.0, w, -1*h,  //8
+    0.0, w, 0.0, //1
+    w, w, 0.0,  //4
+    0.0, w, -1*h,  //8
+    w, w, 0.0,  //4
+    w, w, -1.0*h,  //6
+    0.0, 0.0, 0.0, //2
+    0.0, 0.0, -1*h,  //7
+    w, 0.0, -1*h,  //5
+    0.0, 0.0, 0.0, //2
+    w, 0.0, -1*h,  //5
+    w, 0.0, 0.0,  //3
+	};
+
+    static const GLfloat color_buffer_data [] = {
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	1.0f, 0.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	0.0f, 1.0f, 1.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0, 0, 0,
+	0, 0, 0,
+	1, 1, 1,
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    return create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color_buffer_data, GL_FILL);
+}
 
 VAO* createCube (cubeS* curr_cube)
 {
-    float w=curr_cube->width,h=curr_cube->height;
+    float w=curr_cube->w,h=curr_cube->h;
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
 	0.0, w, 0.0, //1
@@ -1059,7 +1150,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     glm::mat4 MVP;	// MVP = Projection * View * Model
 
     // Load identity to model matrix
-    Matrices.model = glm::mat4(1.0f);
+    /*Matrices.model = glm::mat4(1.0f);
 
     glm::mat4 translateRectangle = glm::translate (rect_pos);        // glTranslatef
     glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));
@@ -1073,10 +1164,10 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    //draw3DObject(rectangle);
+    //draw3DObject(rectangle);*/
 
     // Load identity to model matrix
-    Matrices.model = glm::mat4(1.0f);
+    /*Matrices.model = glm::mat4(1.0f);
 
     glm::mat4 translateCam = glm::translate(eye);
     glm::mat4 rotateCam = glm::rotate((float)((90 - camera_rotation_angle)*M_PI/180.0f), glm::vec3(0,1,0));
@@ -1085,10 +1176,10 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(cam);
+    draw3DObject(cam);*/
 
-    list<tile>::iterator i;
-    for(i=tiles_on_display.begin();i!=tiles_on_display.end();++i)
+    list<tileS>::iterator i;
+    for(i=TileShow.begin();i!=TileShow.end();++i)
     {
         //printf("h");
     // Load identity to model matrix
@@ -1101,7 +1192,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
         glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
         // draw3DObject draws the VAO given to it using current MVP matrix
-        if(i->type==1)
+        if(i->style==1)
             draw3DObject((*i).object);
     }
 
@@ -1117,7 +1208,7 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     draw3DObject(cube1.object);
 
     //cube2
-    glm::mat4 translateonCube1 = glm::translate(glm::vec3(0.0,0.0,cube1.width));
+    glm::mat4 translateonCube1 = glm::translate(glm::vec3(0.0,0.0,cube1.w));
     glm::mat4 translateCube2 = glm::translate(glm::vec3(cube1.x,cube1.y,cube1.z));
     Matrices.model = (translateCube2 * rotationOverallCube * translateonCube1);
     MVP = VP * Matrices.model;
@@ -1127,14 +1218,14 @@ void draw (GLFWwindow* window, float x, float y, float w, float h, int doM, int 
     draw3DObject(cube2.object);
 
 
-    Matrices.model = glm::translate(floor_pos);
+    /*Matrices.model = glm::translate(floor_pos);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    //draw3DObject(floor_vao);
+    //draw3DObject(floor_vao);*/
 
-    int k,score=score_board.moves;
+    int k,score=ScoreBoard.moves;
 	for(k=1;k<=4;k++)
 	{
 		float translation;
@@ -1226,64 +1317,65 @@ GLFWwindow* initGLFW (int width, int height){
 
 void initialiseVariables()
 {
+    //matrices for cube rotation
+    rotationOverallCube=glm::mat4(1.0f);
+    rotateCube=glm::mat4(1.0f);
+    translateCubeEdge=glm::mat4(1.0f);
+    translateCube1EdgeR=glm::mat4(1.0f);
+
     //initialise and create tiles
         int i,j;
-        int level=score_board.level;
-        float cube_initial_posX=0,cube_initial_posY=0,cube_initial_posZ=0.0;
+        int level=ScoreBoard.level;
+        float CubeX=0,CubeY=0,CubeZ=0.0;
         for(i=1;i<=10;i++)
             for(j=1;j<=10;j++)
             {
-                //printf("%d",tile_for_level[level][i][j] );
-                if(tile_for_level[level][i][j])
+                //printf("%d",TileArrange[level][i][j] );
+                if(TileArrange[level][i][j])
                 {
                     //printf("f\n");
-                    int tile_num=tile_for_level[level][i][j];
-                    tile* new_tile=new tile;
-                    new_tile->x=board.x+(new_tile->width)*(i-1);
-                    new_tile->y=board.y+(new_tile->width)*(j-1);
-                    new_tile->z=board.z;
-                    //(new_tile.color_top)=(tile_info[tile_num].color_top);
-                    //(new_tile.color_base)=(tile_info[tile_num].color_base);
-                    //(new_tile.color_side)=(tile_info[tile_num].color_side);
-                    new_tile->type=tile_num;
-                    new_tile->object=createTile("tile",0.0,0.0,0.0,new_tile->width,new_tile->width,new_tile->height,black,black,black,"tile");
-                    tiles_on_display.push_back(*new_tile);
-                    if(cube_initial_posX==0.0 && cube_initial_posY==0.0 && cube_initial_posZ==0.0 && new_tile->type!=2)
+                    int tile_num=TileArrange[level][i][j];
+                    tileS* NTile=new tileS;
+                    NTile->x=board.x+(NTile->w)*(i-1);
+                    NTile->y=board.y+(NTile->w)*(j-1);
+                    NTile->z=board.z;
+                    NTile->style=tile_num;
+                    //NTile->object=createTile("tile",0.0,0.0,0.0,NTile->w,NTile->w,NTile->h,black,black,black,"tile");
+                    NTile->object=createTile(NTile);
+                    TileShow.push_back(*NTile);
+                    if(CubeX==0.0 && CubeY==0.0 && CubeZ==0.0 && NTile->style!=2)
                     {
-                        cube_initial_posX=new_tile->x;
-                        cube_initial_posY=new_tile->y;
-                        cube_initial_posZ=new_tile->z;
+                        CubeX=NTile->x;
+                        CubeY=NTile->y;
+                        CubeZ=NTile->z;
                     }
                 }
             }
 
     //cube1
-        cube1.x=cube_initial_posX;
-        cube1.y=cube_initial_posY;
-        cube1.width=tile_width;
-        cube1.height=tile_width;
-        cube1.z=cube_initial_posZ+cube1.height;
-        cube1.rotationX=0.0;
-        cube1.rotationY=0.0;
+        cube1.x=CubeX;
+        cube1.y=CubeY;
+        cube1.w=TileWidth;
+        cube1.h=TileWidth;
+        cube1.z=CubeZ+cube1.h;
+        cube1.rX=0.0;
+        cube1.rY=0.0;
         cube1.object=createCube(&cube1);
 
     //cube2
-        cube2.x=cube_initial_posX;
-        cube2.y=cube_initial_posY;
-        cube2.z=cube_initial_posZ+tile_width;
-        cube2.width=tile_width;
-        cube2.height=tile_width;
+        cube2.x=CubeX;
+        cube2.y=CubeY;
+        cube2.z=CubeZ+TileWidth;
+        cube2.w=TileWidth;
+        cube2.h=TileWidth;
+        cube2.rX=0.0;
+        cube2.rY=0.0;
         cube2.object=createCube(&cube2);
 
         //cuboid
-            cuboid_lengthX=cube1.width;
-            cuboid_lengthY=cube1.width;
-            cuboid_lengthZ=2*cube1.width;
-        //matrices for cube rotation
-        rotationOverallCube=glm::mat4(1.0f);
-        rotateCube=glm::mat4(1.0f);
-        translateCubeEdge=glm::mat4(1.0f);
-        translateCube1EdgeR=glm::mat4(1.0f);
+            cuboid_lengthX=cube1.w;
+            cuboid_lengthY=cube1.w;
+            cuboid_lengthZ=2*cube1.w;
 
 }
 
@@ -1293,29 +1385,31 @@ void initGL (GLFWwindow* window, int width, int height)
 {
     /* Objects should be created before any other gl function and shaders */
     // Create the models
-    createRectangle ();
-    createCam();
-    createFloor();
+    //createRectangle ();
+//    createCam();
+//    createFloor();
+
+//ScoreBoard
+    float height1 = 0.02f;
+    float width1 = 0.2f;
+
+    createRectangleScore("top",0,black,black,black,black,0,0.2,height1,width1,"score");
+    createRectangleScore("bottom",0,black,black,black,black,0,-0.2,height1,width1,"score");
+    createRectangleScore("middle",0,black,black,black,black,0,0,height1,width1,"score");
+    createRectangleScore("left1",0,black,black,black,black,-0.1,0.1,width1,height1,"score");
+    createRectangleScore("left2",0,black,black,black,black,-0.1,-0.1,width1,height1,"score");
+    createRectangleScore("right1",0,black,black,black,black,0.1,0.1,width1,height1,"score");
+    createRectangleScore("right2",0,black,black,black,black,0.1,-0.1,width1,height1,"score");
+
 
 //intitalise scoreboard
-    score_board.level=1;
-    score_board.score=0;
-    score_board.time=0;
-    score_board.life=3;
-    score_board.moves=0;
+    ScoreBoard.level=1;
+    ScoreBoard.score=0;
+    ScoreBoard.time=0;
+    ScoreBoard.life=3;
+    ScoreBoard.moves=0;
 
     initialiseVariables();
-    float height1 = 0.02f;
-	float width1 = 0.2f;
-	createRectangleScore("top",0,black,black,black,black,0,0.2,height1,width1,"score");
-	createRectangleScore("bottom",0,black,black,black,black,0,-0.2,height1,width1,"score");
-	createRectangleScore("middle",0,black,black,black,black,0,0,height1,width1,"score");
-	createRectangleScore("left1",0,black,black,black,black,-0.1,0.1,width1,height1,"score");
-	createRectangleScore("left2",0,black,black,black,black,-0.1,-0.1,width1,height1,"score");
-	createRectangleScore("right1",0,black,black,black,black,0.1,0.1,width1,height1,"score");
-	createRectangleScore("right2",0,black,black,black,black,0.1,-0.1,width1,height1,"score");
-
-
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
@@ -1339,14 +1433,14 @@ void initGL (GLFWwindow* window, int width, int height)
 
 void check_cube_fall()
 {
-    list<tile>::iterator i = tiles_on_display.begin();
+    list<tileS>::iterator i = TileShow.begin();
     bool fall=true;
-    for(;i!=tiles_on_display.end();++i)
+    for(;i!=TileShow.end();++i)
     {
         //block in square hole
-        if((i->type)==2)
+        if((i->style)==2)
         {
-            if( cube1.x == i->x && cube1.y == i->y /*&& cuboid_lengthX == tile_width && cuboid_lengthY == tile_width*/ )
+            if( cube1.x == i->x && cube1.y == i->y && cuboid_lengthX == TileWidth && cuboid_lengthY == TileWidth )
             {
                 return update_level();
             }
@@ -1357,18 +1451,18 @@ void check_cube_fall()
                 fall=false;
                 break;
         }
-        else if( cuboid_lengthX > tile_width )
+        else if( cuboid_lengthX > TileWidth )
         {
-            if( cube1.x + tile_width == i->x && cube1.y == i->y )
+            if( cube1.x + TileWidth == i->x && cube1.y == i->y )
             {
                 //cube in tile
                 fall=false;
                 break;
             }
         }
-        else if( cuboid_lengthY > tile_width )
+        else if( cuboid_lengthY > TileWidth )
         {
-            if( cube1.y + tile_width == i->y && cube1.x == i->x )
+            if( cube1.y + TileWidth == i->y && cube1.x == i->x )
             {
                 //cube in tile
                 fall=false;
@@ -1379,9 +1473,9 @@ void check_cube_fall()
 
     if(fall==true)
     {
-        score_board.life-=1;
+        ScoreBoard.life-=1;
         //start again
-        if(score_board.life==0)
+        if(ScoreBoard.life==0)
             terminate();
         else
         {
@@ -1393,10 +1487,10 @@ void check_cube_fall()
 
 void update_level()
 {
-    score_board.level+=1;
+    ScoreBoard.level+=1;
 
     printf("high\n");
-    if(score_board.level>2)
+    if(ScoreBoard.level>2)
         //win
         terminate();
     initialiseVariables();
@@ -1407,13 +1501,13 @@ int main (int argc, char** argv)
     int width = 600;
     int height = 600;
     proj_type = 1;
-    rect_pos = glm::vec3(0, 0, 0);
-    floor_pos = glm::vec3(0, 0, 0);
+    //rect_pos = glm::vec3(0, 0, 0);
+    //floor_pos = glm::vec3(0, 0, 0);
     do_rot = 0;
-    floor_rel = 1;
+    //floor_rel = 1;
+    initaliseTile();
 
     GLFWwindow* window = initGLFW(width, height);
-    initalise_tile_for_levels();
     initGLEW();
     initGL (window, width, height);
 
